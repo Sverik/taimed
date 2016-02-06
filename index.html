@@ -20,6 +20,7 @@ function preload() {
 
     game.load.image('sky', 'assets/sky.png');
     game.load.image('kast', 'assets/sinine_kast.png');
+    game.load.image('asukoht', 'assets/asukoht.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
@@ -30,12 +31,13 @@ var player;
 var platforms;
 var cursors;
 
+var targets;
+
 var stars;
 var score = 0;
 var scoreText;
 
 function create() {
-
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -44,7 +46,7 @@ function create() {
 
     //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = game.add.group();
-
+    
     //  We will enable physics for any object that is created in this group
     platforms.enableBody = true;
 
@@ -64,6 +66,14 @@ function create() {
     ledge = platforms.create(-150, 250, 'ground');
     ledge.body.immovable = true;
 
+    // targets
+    targets = game.add.group();
+    targets.enableBody =  true;
+    
+    targets.create(50, 50, 'asukoht').body.immovable = true;
+    targets.create(100, 50, 'asukoht').body.immovable = true;
+    targets.create(150, 50, 'asukoht').body.immovable = true;
+    
     // The player and its settings
     player = game.add.sprite(32, game.world.height - 150, 'dude');
 
@@ -81,6 +91,7 @@ function create() {
 
     //  Finally some stars to collect
     stars = game.add.group();
+    stars.enableBody = true;
 
     createRes();
     createRes();
@@ -142,11 +153,61 @@ function createRes() {
     star.inputEnabled = true;
     star.input.enableDrag(false, true);
     star.input.useHandCursor = true;
+    star.events.onDragStart.add(function(){
+        star.dragStart = {
+            x: star.x,
+            y: star.y
+        };
+    }, this);
+    star.events.onDragStop.add(function(){
+        console.log("stop drag " + star.customValue);
+        var overlapped = Array();
+        game.physics.arcade.overlap(star, targets, function(star, target) {
+            overlapped.push(target);
+        }, function(star, target) {
+            if (target.filled && star.atTarget != target) {
+                return false;
+            }
+        }, this);
+
+        // find closest
+        var c_d2 = 99999;
+        var closest = null;
+        overlapped.forEach(function(target){
+            var d2 = (target.x - star.x)*(target.x - star.x) + (target.y - star.y)*(target.y - star.y);
+            if (d2 < c_d2) {
+                c_d2 = d2;
+                closest = target;
+            }
+        });
+        
+        if (closest == null) {
+            // return to previous position
+            star.x = star.dragStart.x;
+            star.y = star.dragStart.y;
+        } else {
+            // snap and put to closest target
+            star.x = closest.x;
+            star.y = closest.y;
+            // set old target empty, if it existed
+            if (star.atTarget) {
+                star.atTarget.filled = false;
+            }
+            // connect to new target
+            star.atTarget = closest;
+            // mark it as filled
+            closest.filled = true;
+        }
+    }, this);
     
     star.customValue = Math.floor(Math.random() * 9) + 1;
     star.customText = game.add.text(28, 26, star.customValue, { font: "24px Arial", fill: "#112200", wordWrap: true, wordWrapWidth: star.width, align: "center" });
     star.customText.anchor.set(0.5);
     star.addChild(star.customText);
+}
+
+function createTarget(target) {
+    target.filled = false;
 }
 
 function collectStar (player, star) {
