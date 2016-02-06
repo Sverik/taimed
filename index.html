@@ -27,11 +27,57 @@ function preload() {
 
 }
 
+function Gate(value, x, y) {
+    this.value = value;
+    this.x = x;
+    this.y = y;
+    this.targetStep = 48 + 8;
+    this.targets = new Array();
+    this.inputCount = 0;
+}
+
+Gate.prototype.init = function(inputCount) {
+    this.inputCount = inputCount;
+    for (var i = 0 ; i < inputCount ; i++) {
+        var target = createTarget(this.x + i * this.targetStep, this.y);
+        var thisGate = this;
+        target.onReceive = function(res) {
+            var sum = 0;
+            thisGate.targets.forEach(function(t) {
+                if (t.filled) {
+                    sum += t.res.customValue;
+                }
+            });
+            console.log("g@" + thisGate.x + ", s=" + sum);
+            if (sum == thisGate.value) {
+                thisGate.destroy();
+            }
+        };
+        this.targets.push(target);
+    }
+}
+
+Gate.prototype.destroy = function() {
+    // destroy targets and ress
+    this.targets.forEach(function(t) {
+        if (t.res) {
+            t.res.destroy();
+        }
+        t.destroy();
+    });
+    // increment score
+    score += 10;
+    scoreText.text = 'Score: ' + score;
+    // create new Gate
+    new Gate(this.value, this.x, this.y).init(this.inputCount);
+}
+
 var player;
 var platforms;
 var cursors;
 
 var targets;
+var dispensers;
 
 var stars;
 var score = 0;
@@ -70,10 +116,19 @@ function create() {
     targets = game.add.group();
     targets.enableBody =  true;
     
-    targets.create(50, 50, 'asukoht').body.immovable = true;
-    targets.create(100, 50, 'asukoht').body.immovable = true;
-    targets.create(150, 50, 'asukoht').body.immovable = true;
+    new Gate(10, 50, 70).init(2);
     
+    new Gate(10, 200, 70).init(3);
+    
+    new Gate(10, 400, 70).init(3);
+//     createTarget(50, 50);
+//     createTarget(100, 50);
+
+    dispensers = new Array();
+    createDispenser(75, 400);
+    createDispenser(150, 400);
+    createDispenser(225, 400);
+
     // The player and its settings
     player = game.add.sprite(32, game.world.height - 150, 'dude');
 
@@ -93,10 +148,6 @@ function create() {
     stars = game.add.group();
     stars.enableBody = true;
 
-    createRes();
-    createRes();
-    createRes();
-    
     //  The score
     scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
 
@@ -144,6 +195,15 @@ function update() {
     {
         player.body.velocity.y = -350;
     }
+    
+    // Dispense new res, if needed.
+    dispensers.forEach(function(dispenser) {
+        if (dispenser.target.filled) {
+            return;
+        }
+        var res = createRes();
+        dispenser.target.putRes(res);
+    });
 
 }
 
@@ -160,7 +220,6 @@ function createRes() {
         };
     }, this);
     star.events.onDragStop.add(function(){
-        console.log("stop drag " + star.customValue);
         var overlapped = Array();
         game.physics.arcade.overlap(star, targets, function(star, target) {
             overlapped.push(target);
@@ -187,16 +246,7 @@ function createRes() {
             star.y = star.dragStart.y;
         } else {
             // snap and put to closest target
-            star.x = closest.x;
-            star.y = closest.y;
-            // set old target empty, if it existed
-            if (star.atTarget) {
-                star.atTarget.filled = false;
-            }
-            // connect to new target
-            star.atTarget = closest;
-            // mark it as filled
-            closest.filled = true;
+            closest.putRes(star);
         }
     }, this);
     
@@ -204,10 +254,37 @@ function createRes() {
     star.customText = game.add.text(28, 26, star.customValue, { font: "24px Arial", fill: "#112200", wordWrap: true, wordWrapWidth: star.width, align: "center" });
     star.customText.anchor.set(0.5);
     star.addChild(star.customText);
+    
+    return star;
 }
 
-function createTarget(target) {
-    target.filled = false;
+function createTarget(x, y) {
+    var target = targets.create(x, y, 'asukoht');
+    target.body.immovable = true;
+    target.onReceive = function(res){};
+    target.res = null;
+    target.putRes = function(res) {
+        res.x = target.x;
+        res.y = target.y;
+        // set old target empty, if it existed
+        if (res.atTarget) {
+            res.atTarget.filled = false;
+        }
+        // connect to new target
+        res.atTarget = target;
+        // mark it as filled
+        target.filled = true;
+        target.res = res;
+        target.onReceive(res);
+    };
+    return target;
+}
+
+function createDispenser(x, y) {
+    var target = createTarget(x, y);
+    dispensers.push({
+        target: target
+    });
 }
 
 function collectStar (player, star) {
