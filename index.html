@@ -14,7 +14,7 @@
 
 <script type="text/javascript">
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var game = new Phaser.Game(800, 600, Phaser.AUTO, 'arvutused', { preload: preload, create: create, update: update });
 
 function preload() {
 
@@ -24,7 +24,7 @@ function preload() {
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
-
+    
 }
 
 function Gate(value, x, y) {
@@ -37,6 +37,7 @@ function Gate(value, x, y) {
     this.targetYOffset = 14;
     this.operatorYOffset = 22;
     this.valueYOffset = 0;
+    this.lockdownTime = 1200;
     this.targets = new Array();
     this.inputCount = 0;
     this.notes = new Array();
@@ -66,11 +67,30 @@ Gate.prototype.init = function(inputCount) {
             });
             console.log("g@" + thisGate.x + ", s=" + sum);
             if (sum == thisGate.value) {
-                thisGate.destroy();
+                // disable modification
+                thisGate.lock();
+                // throw confetti
+                confetti(thisGate);
+                timer.repeat(300, thisGate.lockdownTime / 300, confetti, this, thisGate);
+                // destroy afterwards
+                timer.add(thisGate.lockdownTime, function() {
+                    thisGate.destroy();
+                }, thisGate);
             }
         };
         this.targets.push(target);
     }
+}
+
+Gate.prototype.lock = function() {
+    // Lock targets and ress.
+    this.targets.forEach(function(t) {
+        t.lock();
+        if (t.filled && t.res) {
+            t.res.input.draggable = false;
+        }
+    });
+    console.log("g@" + this.x + " locked");
 }
 
 Gate.prototype.destroy = function() {
@@ -104,7 +124,13 @@ var stars;
 var score = 0;
 var scoreText;
 
+var timer;
+var emitter;
+
 function create() {
+    timer = game.time.create(false);
+    timer.start();
+    
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -177,6 +203,9 @@ function create() {
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
     
+    emitter = game.add.emitter(0, 0, 100);
+    emitter.makeParticles('star');
+    emitter.gravity = 150;
 }
 
 function update() {
@@ -230,6 +259,14 @@ function update() {
 
 }
 
+function confetti(gate) {
+    var width = (gate.inputCount * gate.targetStep - gate.operatorWidth);
+    emitter.x = gate.x + 0.25 * width + Math.random() * width * (0.25 + 0.25);
+    emitter.y = gate.y + Math.random() * 30;
+    emitter.start(true, 1200, null, 6);
+    console.log("g@" + gate.x + "x" + gate.y);
+}
+
 function createRes() {
     var star = stars.create(90, game.world.height - 150, 'kast');
     
@@ -247,7 +284,7 @@ function createRes() {
         game.physics.arcade.overlap(star, targets, function(star, target) {
             overlapped.push(target);
         }, function(star, target) {
-            if (target.filled && star.atTarget != target) {
+            if (target.locked || (target.filled && star.atTarget != target)) {
                 return false;
             }
         }, this);
@@ -286,6 +323,10 @@ function createTarget(x, y) {
     target.body.immovable = true;
     target.onUpdate = function(res){};
     target.res = null;
+    target.locked = false;
+    target.lock = function() {
+        target.locked = true;
+    }
     target.putRes = function(res) {
         res.x = target.x;
         res.y = target.y;
