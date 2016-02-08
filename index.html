@@ -31,17 +31,33 @@ function Gate(value, x, y) {
     this.value = value;
     this.x = x;
     this.y = y;
-    this.targetStep = 48 + 8;
+    this.operatorOffset = 48;
+    this.operatorWidth = 16;
+    this.targetStep = this.operatorOffset + this.operatorWidth;
+    this.targetYOffset = 14;
+    this.operatorYOffset = 22;
+    this.valueYOffset = 0;
     this.targets = new Array();
     this.inputCount = 0;
+    this.notes = new Array();
 }
 
 Gate.prototype.init = function(inputCount) {
     this.inputCount = inputCount;
+    var valueText = game.add.text(this.x + (inputCount * this.targetStep - this.operatorWidth) / 2, this.y + this.valueYOffset, '' + this.value + ' =', { fontSize: '32px', fill: '#000' });
+    valueText.anchor.set(0.5);
+    this.notes.push(valueText);
+    notes.addChild(valueText);
     for (var i = 0 ; i < inputCount ; i++) {
-        var target = createTarget(this.x + i * this.targetStep, this.y);
+        var target = createTarget(this.x + i * this.targetStep, this.y + this.targetYOffset);
+        if (i < inputCount - 1) {
+            // Add a + sign
+            var operator = game.add.text(this.x + i * this.targetStep + this.operatorOffset, this.y + this.operatorYOffset, '+', { fontSize: '32px', fill: '#000' });
+            this.notes.push(operator);
+            notes.addChild(operator);
+        }
         var thisGate = this;
-        target.onReceive = function(res) {
+        target.onUpdate = function(res) {
             var sum = 0;
             thisGate.targets.forEach(function(t) {
                 if (t.filled) {
@@ -60,16 +76,20 @@ Gate.prototype.init = function(inputCount) {
 Gate.prototype.destroy = function() {
     // destroy targets and ress
     this.targets.forEach(function(t) {
-        if (t.res) {
+        if (t.filled && t.res) {
             t.res.destroy();
         }
         t.destroy();
+    });
+    // destroy text components
+    this.notes.forEach(function(n) {
+        n.destroy();
     });
     // increment score
     score += 10;
     scoreText.text = 'Score: ' + score;
     // create new Gate
-    new Gate(this.value, this.x, this.y).init(this.inputCount);
+    new Gate(Math.floor(Math.random() * 6) + 5, this.x, this.y).init((Math.random() > 0.5 ? 2 : 3));
 }
 
 var player;
@@ -77,6 +97,7 @@ var platforms;
 var cursors;
 
 var targets;
+var notes;
 var dispensers;
 
 var stars;
@@ -111,16 +132,18 @@ function create() {
 
     ledge = platforms.create(-150, 250, 'ground');
     ledge.body.immovable = true;
+    
+    notes = game.add.group();
 
     // targets
     targets = game.add.group();
     targets.enableBody =  true;
     
-    new Gate(10, 50, 70).init(2);
+    new Gate(10, 50, 170).init(2);
     
-    new Gate(10, 200, 70).init(3);
+    new Gate(10, 250, 170).init(3);
     
-    new Gate(10, 400, 70).init(3);
+    new Gate(10, 450, 170).init(3);
 //     createTarget(50, 50);
 //     createTarget(100, 50);
 
@@ -261,21 +284,27 @@ function createRes() {
 function createTarget(x, y) {
     var target = targets.create(x, y, 'asukoht');
     target.body.immovable = true;
-    target.onReceive = function(res){};
+    target.onUpdate = function(res){};
     target.res = null;
     target.putRes = function(res) {
         res.x = target.x;
         res.y = target.y;
         // set old target empty, if it existed
+        var oldTarget = null;
         if (res.atTarget) {
-            res.atTarget.filled = false;
+            oldTarget = res.atTarget;
+            oldTarget.filled = false;
+            oldTarget.res = null;
         }
         // connect to new target
         res.atTarget = target;
         // mark it as filled
         target.filled = true;
         target.res = res;
-        target.onReceive(res);
+        target.onUpdate(res);
+        if (oldTarget != null) {
+            oldTarget.onUpdate(null);
+        }
     };
     return target;
 }
