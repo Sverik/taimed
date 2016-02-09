@@ -18,6 +18,13 @@ Target.prototype.onUpdate = function(){
 
 Target.prototype.lock = function(){
     this.locked = true;
+    if (this.res) {
+        var thisRes = this.res;
+        thisRes.frame = 1;
+        this.res.events.onInputOut.add(function() {
+            thisRes.input.useHandCursor = false;
+        });
+    }
 }
 
 Target.prototype.destroy = function(){

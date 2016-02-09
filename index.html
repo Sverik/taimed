@@ -21,7 +21,7 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, 'arvutused', { preload: preloa
 function preload() {
 
     game.load.image('sky', 'assets/sky.png');
-    game.load.image('kast', 'assets/sinine_kast.png');
+    game.load.spritesheet('kast', 'assets/sinine_kast.png', 48, 48);
     game.load.image('asukoht', 'assets/koht.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('star', 'assets/star.png');
@@ -132,7 +132,12 @@ function update() {
     game.physics.arcade.collide(stars, platforms);
     
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    game.physics.arcade.overlap(player, stars, collectStar, null, this);
+    game.physics.arcade.overlap(player, stars, collectStar, function(player, star){
+        // locked res cannot be picked up by the player
+        if (star.atTarget && star.atTarget.locked) {
+            return false;
+        }
+    }, this);
 
     //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
