@@ -12,6 +12,8 @@
 </head>
 <body>
 
+<script type="text/javascript" src="js/Gate.js"></script>
+<script type="text/javascript" src="js/Target.js"></script>
 <script type="text/javascript">
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'arvutused', { preload: preload, create: create, update: update });
@@ -27,100 +29,11 @@ function preload() {
     
 }
 
-function Gate(value, x, y) {
-    this.value = value;
-    this.x = x;
-    this.y = y;
-    this.operatorOffset = 48;
-    this.operatorWidth = 16;
-    this.targetStep = this.operatorOffset + this.operatorWidth;
-    this.targetYOffset = 14;
-    this.operatorYOffset = 22;
-    this.valueYOffset = 0;
-    this.confettiDelay = 350;
-    this.targets = new Array();
-    this.inputCount = 0;
-    this.notes = new Array();
-}
-
-Gate.prototype.init = function(inputCount) {
-    this.inputCount = inputCount;
-    var valueText = game.add.text(this.x + (inputCount * this.targetStep - this.operatorWidth) / 2, this.y + this.valueYOffset, '' + this.value + ' =', { fontSize: '32px', fill: '#000' });
-    valueText.anchor.set(0.5);
-    this.notes.push(valueText);
-    notes.addChild(valueText);
-    for (var i = 0 ; i < inputCount ; i++) {
-        var target = createTarget(this.x + i * this.targetStep, this.y + this.targetYOffset);
-        if (i < inputCount - 1) {
-            // Add a + sign
-            var operator = game.add.text(this.x + i * this.targetStep + this.operatorOffset, this.y + this.operatorYOffset, '+', { fontSize: '32px', fill: '#000' });
-            this.notes.push(operator);
-            notes.addChild(operator);
-        }
-        var thisGate = this;
-        target.onUpdate = function(res) {
-            var sum = 0;
-            thisGate.targets.forEach(function(t) {
-                if (t.filled) {
-                    sum += t.res.customValue;
-                }
-            });
-            console.log("g@" + thisGate.x + ", s=" + sum);
-            if (sum == thisGate.value) {
-                // disable modification
-                thisGate.lock();
-                // start to progress
-                progressing++;
-                // throw confetti
-                confetti(thisGate);
-                timer.repeat(thisGate.confettiDelay, thisGate.value - 1, confetti, this, thisGate);
-                var lockdownTime = thisGate.confettiDelay * (thisGate.value - 1);
-                // destroy afterwards
-                timer.add(lockdownTime, function() {
-                    progressing--;
-                    thisGate.destroy();
-                }, thisGate);
-            }
-        };
-        this.targets.push(target);
-    }
-}
-
-Gate.prototype.lock = function() {
-    // Lock targets and ress.
-    this.targets.forEach(function(t) {
-        t.lock();
-        if (t.filled && t.res) {
-            t.res.input.draggable = false;
-        }
-    });
-    console.log("g@" + this.x + " locked");
-}
-
-Gate.prototype.destroy = function() {
-    // destroy targets and ress
-    this.targets.forEach(function(t) {
-        if (t.filled && t.res) {
-            t.res.destroy();
-        }
-        t.destroy();
-    });
-    // destroy text components
-    this.notes.forEach(function(n) {
-        n.destroy();
-    });
-    // increment score
-    score += 10;
-    scoreText.text = 'Score: ' + score;
-    // create new Gate
-    new Gate(Math.floor(Math.random() * 6) + 5, this.x, this.y).init((Math.random() > 0.5 ? 2 : 3));
-}
-
 var player;
 var platforms;
 var cursors;
 
-var targets;
+var targetGroup;
 var notes;
 var dispensers;
 
@@ -168,16 +81,14 @@ function create() {
     notes = game.add.group();
 
     // targets
-    targets = game.add.group();
-    targets.enableBody =  true;
+    targetGroup = game.add.group();
+    targetGroup.enableBody =  true;
     
-    new Gate(10, 50, 170).init(2);
+    new Gate(10, 50, 170, targetGroup).init(2);
     
-    new Gate(10, 250, 170).init(3);
+    new Gate(10, 250, 170, targetGroup).init(3);
     
-    new Gate(10, 450, 170).init(3);
-//     createTarget(50, 50);
-//     createTarget(100, 50);
+    new Gate(10, 450, 170, targetGroup).init(3);
 
     dispensers = new Array();
     createDispenser(75, 400);
@@ -255,12 +166,12 @@ function update() {
     }
     
     // Dispense new res, if needed.
-    dispensers.forEach(function(dispenser) {
-        if (dispenser.target.filled) {
+    dispensers.forEach(function(target) {
+        if (target.filled) {
             return;
         }
         var res = createRes();
-        dispenser.target.putRes(res);
+        target.putRes(res);
     });
 
 }
@@ -287,10 +198,10 @@ function createRes() {
     }, this);
     star.events.onDragStop.add(function(){
         var overlapped = Array();
-        game.physics.arcade.overlap(star, targets, function(star, target) {
-            overlapped.push(target);
-        }, function(star, target) {
-            if (target.locked || (target.filled && star.atTarget != target)) {
+        game.physics.arcade.overlap(star, targetGroup, function(star, targetSprite) {
+            overlapped.push(targetSprite);
+        }, function(star, targetSprite) {
+            if (targetSprite.target.locked || (targetSprite.target.filled && star.atTarget != targetSprite.target)) {
                 return false;
             }
         }, this);
@@ -298,11 +209,11 @@ function createRes() {
         // find closest
         var c_d2 = 99999;
         var closest = null;
-        overlapped.forEach(function(target){
-            var d2 = (target.x - star.x)*(target.x - star.x) + (target.y - star.y)*(target.y - star.y);
+        overlapped.forEach(function(targetSprite){
+            var d2 = (targetSprite.x - star.x)*(targetSprite.x - star.x) + (targetSprite.y - star.y)*(targetSprite.y - star.y);
             if (d2 < c_d2) {
                 c_d2 = d2;
-                closest = target;
+                closest = targetSprite;
             }
         });
         
@@ -312,7 +223,7 @@ function createRes() {
             star.y = star.dragStart.y;
         } else {
             // snap and put to closest target
-            closest.putRes(star);
+            closest.target.putRes(star);
         }
     }, this);
     
@@ -324,43 +235,9 @@ function createRes() {
     return star;
 }
 
-function createTarget(x, y) {
-    var target = targets.create(x, y, 'asukoht');
-    target.body.immovable = true;
-    target.onUpdate = function(res){};
-    target.res = null;
-    target.locked = false;
-    target.lock = function() {
-        target.locked = true;
-    }
-    target.putRes = function(res) {
-        res.x = target.x;
-        res.y = target.y;
-        // set old target empty, if it existed
-        var oldTarget = null;
-        if (res.atTarget) {
-            oldTarget = res.atTarget;
-            oldTarget.filled = false;
-            oldTarget.res = null;
-        }
-        // connect to new target
-        res.atTarget = target;
-        // mark it as filled
-        target.filled = true;
-        target.res = res;
-        target.onUpdate(res);
-        if (oldTarget != null) {
-            oldTarget.onUpdate(null);
-        }
-    };
-    return target;
-}
-
 function createDispenser(x, y) {
-    var target = createTarget(x, y);
-    dispensers.push({
-        target: target
-    });
+    var target = new Target(targetGroup).init(x, y);
+    dispensers.push(target);
 }
 
 function collectStar (player, star) {
