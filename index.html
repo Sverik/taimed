@@ -44,7 +44,7 @@ var scoreText;
 var timer;
 var emitter;
 
-var progressing = 0;
+var valueLimit = 5;
 
 function create() {
     timer = game.time.create(false);
@@ -85,9 +85,9 @@ function create() {
     targetGroup.enableBody =  true;
     
     dispensers = new Array();
-    createDispenser(75, 400);
-    createDispenser(150, 400);
-    createDispenser(225, 400);
+    for (var k = 0 ; k < 8 ; k++) {
+        createDispenser(70 + k * 85, 460);
+    }
 
     // The player and its settings
     player = game.add.sprite(32, game.world.height - 150, 'dude');
@@ -108,38 +108,22 @@ function create() {
     stars = game.add.group();
     stars.enableBody = true;
 
-    // Gate configuration
-    var conf1 = [
-        {
-            nodeType: NodeTypeEnum.PLUS,
-//            value: 7
-        },
-        {
-            nodeType: NodeTypeEnum.PLUS,
-        },
-        {
-            nodeType: NodeTypeEnum.VALUE,
-//            value: 10
-        }
-    ];
-    
-    new Gate(conf1, 50, 170, targetGroup).init();
-
-    new Gate(conf1, 300, 170, targetGroup).init();
-    
-//    new Gate(10, 250, 170, targetGroup).init(3);
-    
-//    new Gate(10, 450, 170, targetGroup).init(3);
-
     //  The score
     scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
     
+    // Emitter
     emitter = game.add.emitter(0, 0, 100);
     emitter.makeParticles('star');
     emitter.gravity = 150;
+    
+    // Gates
+    createGate(30, 300);
+    createGate(290, 300);
+    createGate(550, 300);
+    
 }
 
 function update() {
@@ -166,7 +150,7 @@ function update() {
 
         player.animations.play('left');
     }
-    else if (cursors.right.isDown || progressing > 0)
+    else if (cursors.right.isDown)
     {
         //  Move to the right
         player.body.velocity.x = 150;
@@ -203,12 +187,38 @@ function confetti(gate) {
     emitter.x = gate.x + 0.25 * width + Math.random() * width * (0.25 + 0.25);
     emitter.y = gate.y + Math.random() * 30;
     emitter.start(true, 2400, null, 1);
-    console.log("g@" + gate.x + "x" + gate.y);
+}
+
+function createGate(x, y) {
+    var value = Math.ceil(Math.random() * valueLimit);
+    var a = Math.floor(Math.random() * value);
+    var b = value - a;
+    // Dummy gate configuration
+    var conf = [
+        {
+            nodeType: NodeTypeEnum.PLUS,
+            value: a
+        },
+        {
+            nodeType: NodeTypeEnum.PLUS,
+            value: b
+        },
+        {
+            nodeType: NodeTypeEnum.VALUE,
+            value: undefined
+        }
+    ];
+    
+    var gate = new Gate(conf, x, y, targetGroup);
+    gate.afterDestroy = function(thisGate) {
+        createGate(thisGate.x, thisGate.y);
+    };
+    gate.init();
 }
 
 function createRes(value) {
     if (value === undefined) {
-        value = Math.ceil(Math.random()*10);
+        value = Math.floor(Math.random()*(valueLimit + 1));
     }
 
     var star = stars.create(90, game.world.height - 150, 'kast');
@@ -254,7 +264,7 @@ function createRes(value) {
     }, this);
     
     star.customValue = value;
-    star.customText = game.add.text(28, 26, star.customValue, { font: "24px Arial", fill: "#112200", wordWrap: true, wordWrapWidth: star.width, align: "center" });
+    star.customText = game.add.text(28, 26, star.customValue.toString(), { font: "24px Arial", fill: "#112200", wordWrap: true, wordWrapWidth: star.width, align: "center" });
     star.customText.anchor.set(0.5);
     star.addChild(star.customText);
     

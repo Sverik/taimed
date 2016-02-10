@@ -25,10 +25,11 @@ function Gate(configuration, x, y, targetGroup) {
     this.targetYOffset = 14;
     this.operatorYOffset = 22;
     this.valueYOffset = -30;
-    this.confettiDelay = 350;
+    this.confettiDelay = 250;
     this.targets = new Array(); // of TargetNodes
     this.notes = new Array();
     this.targetGroup = targetGroup;
+    this.afterDestroy = function() {};
 }
 
 Gate.prototype.init = function() {
@@ -62,26 +63,31 @@ Gate.prototype.init = function() {
         target.onUpdate = function(res) {
             var expectedValue = 0;
             var sum = 0;
-            thisGate.targets.forEach(function(t) {
-                var target = t.target;
-                if (target.filled) {
-                    var occupiedValue = target.res.customValue;
-                    console.log("g@" + thisGate.x + "t" + target.sprite.x + " nodeType=" + t.nodeType + ", ov=" + occupiedValue);
+            var notFilledCount = thisGate.targetCount;
+            var debugValues = new Array();
+            for (var i = 0 ; i < thisGate.targets.length ; i++) {
+                var t = thisGate.targets[i];
+                if (t.target.filled) {
+                    notFilledCount--;
+                    var occupiedValue = t.target.res.customValue;
+                    debugValues.push(occupiedValue);
                     switch (t.nodeType) {
                         case NodeTypeEnum.VALUE: expectedValue = occupiedValue; break;
                         case NodeTypeEnum.PLUS: sum += occupiedValue; break;
                         case NodeTypeEnum.MINUS: sum -= occupiedValue; break;
                     }
                 }
-            });
-            console.log("g@" + thisGate.x + ", s=" + sum + ", expct=" + expectedValue);
-            if (sum == expectedValue) {
+            }
+            if (notFilledCount <= 0 && sum == expectedValue) {
                 // disable modification
                 thisGate.lock();
                 // throw confetti
                 confetti(thisGate);
                 timer.repeat(thisGate.confettiDelay, expectedValue - 1, confetti, this, thisGate);
                 var lockdownTime = thisGate.confettiDelay * (expectedValue - 1);
+                // increment score
+                score += 10;
+                scoreText.text = 'Score: ' + score;
                 // destroy afterwards
                 timer.add(lockdownTime, function() {
                     thisGate.destroy();
@@ -110,7 +116,6 @@ Gate.prototype.lock = function() {
             target.res.input.draggable = false;
         }
     });
-    console.log("g@" + this.x + " locked");
 }
 
 Gate.prototype.destroy = function() {
@@ -126,11 +131,8 @@ Gate.prototype.destroy = function() {
     this.notes.forEach(function(n) {
         n.destroy();
     });
-    // increment score
-    score += 10;
-    scoreText.text = 'Score: ' + score;
     // create new Gate
-    new Gate(Math.floor(Math.random() * 6) + 5, this.x, this.y, this.targetGroup).init((Math.random() > 0.5 ? 2 : 3));
+    this.afterDestroy(this);
 }
 
 var NodeTypeEnum = {
