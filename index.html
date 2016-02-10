@@ -34,7 +34,7 @@ var platforms;
 var cursors;
 
 var targetGroup;
-var notes;
+var notesGroup;
 var dispensers;
 
 var stars;
@@ -78,18 +78,12 @@ function create() {
     ledge = platforms.create(-150, 250, 'ground');
     ledge.body.immovable = true;
     
-    notes = game.add.group();
+    notesGroup = game.add.group();
 
     // targets
     targetGroup = game.add.group();
     targetGroup.enableBody =  true;
     
-    new Gate(10, 50, 170, targetGroup).init(2);
-    
-    new Gate(10, 250, 170, targetGroup).init(3);
-    
-    new Gate(10, 450, 170, targetGroup).init(3);
-
     dispensers = new Array();
     createDispenser(75, 400);
     createDispenser(150, 400);
@@ -113,6 +107,29 @@ function create() {
     //  Finally some stars to collect
     stars = game.add.group();
     stars.enableBody = true;
+
+    // Gate configuration
+    var conf1 = [
+        {
+            nodeType: NodeTypeEnum.VALUE,
+            value: 10
+        },
+        {
+            nodeType: NodeTypeEnum.PLUS,
+            value: 7
+        },
+        {
+            nodeType: NodeTypeEnum.PLUS,
+        }
+    ];
+    
+    new Gate(conf1, 50, 170, targetGroup).init();
+
+    new Gate(conf1, 250, 170, targetGroup).init();
+    
+//    new Gate(10, 250, 170, targetGroup).init(3);
+    
+//    new Gate(10, 450, 170, targetGroup).init(3);
 
     //  The score
     scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
@@ -189,7 +206,11 @@ function confetti(gate) {
     console.log("g@" + gate.x + "x" + gate.y);
 }
 
-function createRes() {
+function createRes(value) {
+    if (value === undefined) {
+        value = Math.ceil(Math.random()*10);
+    }
+
     var star = stars.create(90, game.world.height - 150, 'kast');
     
     star.inputEnabled = true;
@@ -232,7 +253,7 @@ function createRes() {
         }
     }, this);
     
-    star.customValue = Math.floor(Math.random() * 9) + 1;
+    star.customValue = value;
     star.customText = game.add.text(28, 26, star.customValue, { font: "24px Arial", fill: "#112200", wordWrap: true, wordWrapWidth: star.width, align: "center" });
     star.customText.anchor.set(0.5);
     star.addChild(star.customText);
