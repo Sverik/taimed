@@ -18,6 +18,7 @@ function Gate(configuration, x, y, targetGroup) {
     this.configuration = configuration;
     this.x = x;
     this.y = y;
+    this.targetCount = 0;
     this.operatorOffset = 48;
     this.operatorWidth = 16;
     this.targetStep = this.operatorOffset + this.operatorWidth;
@@ -28,11 +29,11 @@ function Gate(configuration, x, y, targetGroup) {
     this.targets = new Array(); // of TargetNodes
     this.notes = new Array();
     this.targetGroup = targetGroup;
-    this.value = -1;
 }
 
 Gate.prototype.init = function() {
     var nextNonValueXOffset = 0;
+    this.targetCount = this.configuration.length;
     for (var i = 0 ; i < this.configuration.length ; i++) {
         var nodeConf = this.configuration[i];
         // Target coordinates
@@ -75,8 +76,6 @@ Gate.prototype.init = function() {
             });
             console.log("g@" + thisGate.x + ", s=" + sum + ", expct=" + expectedValue);
             if (sum == expectedValue) {
-                // we know the gate value!
-                thisGate.value = expectedValue;
                 // disable modification
                 thisGate.lock();
                 // throw confetti
