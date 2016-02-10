@@ -111,21 +111,21 @@ function create() {
     // Gate configuration
     var conf1 = [
         {
+            nodeType: NodeTypeEnum.PLUS,
+//            value: 7
+        },
+        {
+            nodeType: NodeTypeEnum.PLUS,
+        },
+        {
             nodeType: NodeTypeEnum.VALUE,
-            value: 10
-        },
-        {
-            nodeType: NodeTypeEnum.PLUS,
-            value: 7
-        },
-        {
-            nodeType: NodeTypeEnum.PLUS,
+//            value: 10
         }
     ];
     
     new Gate(conf1, 50, 170, targetGroup).init();
 
-    new Gate(conf1, 250, 170, targetGroup).init();
+    new Gate(conf1, 300, 170, targetGroup).init();
     
 //    new Gate(10, 250, 170, targetGroup).init(3);
     
@@ -199,7 +199,7 @@ function update() {
 }
 
 function confetti(gate) {
-    var width = (gate.inputCount * gate.targetStep - gate.operatorWidth);
+    var width = (gate.value * gate.targetStep - gate.operatorWidth);
     emitter.x = gate.x + 0.25 * width + Math.random() * width * (0.25 + 0.25);
     emitter.y = gate.y + Math.random() * 30;
     emitter.start(true, 2400, null, 1);

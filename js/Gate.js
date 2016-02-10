@@ -2,15 +2,15 @@
  * Sample configuration:
  * [
  *  {
- *      nodeType: NodeTypeEnum.VALUE,
- *      value: 10
- *  },
- *  {
  *      nodeType: NodeTypeEnum.PLUS,
  *      value: 7
  *  },
  *  {
  *      nodeType: NodeTypeEnum.PLUS,
+ *  },
+ *  {
+ *      nodeType: NodeTypeEnum.VALUE,
+ *      value: 10
  *  }
  * ]
  */
@@ -23,11 +23,12 @@ function Gate(configuration, x, y, targetGroup) {
     this.targetStep = this.operatorOffset + this.operatorWidth;
     this.targetYOffset = 14;
     this.operatorYOffset = 22;
-    this.valueYOffset = -20;
+    this.valueYOffset = -30;
     this.confettiDelay = 350;
     this.targets = new Array(); // of TargetNodes
     this.notes = new Array();
     this.targetGroup = targetGroup;
+    this.value = -1;
 }
 
 Gate.prototype.init = function() {
@@ -37,31 +38,22 @@ Gate.prototype.init = function() {
         // Target coordinates
         var tx = 0;
         var ty = 0;
-        if (nodeConf.nodeType == NodeTypeEnum.VALUE) {
-            // node of type VALUE
-            // create equals sign, currently only support format a = b + c, not b + c = a
-            tx = this.x + ((this.configuration.length - 1) * this.targetStep - this.operatorWidth) / 2;
-            ty = this.y + this.valueYOffset;
-            var equalsText = game.add.text(tx, ty, '=', { fontSize: '32px', fill: '#000' });
-            //equalsText.anchor.set(0.5);
-            this.notes.push(equalsText);
-            notesGroup.addChild(equalsText);
-            // position of the target
-            tx = tx - this.operatorOffset;
-        } else {
-            // node of type PLUS or MINUS
-            // prefix with operator, if needed
-            if (nextNonValueXOffset != 0) {
-                var operatorString = (nodeConf.nodeType == NodeTypeEnum.PLUS ? '+' : '-');
-                var operator = game.add.text(this.x + nextNonValueXOffset, this.y + this.operatorYOffset, operatorString, { fontSize: '32px', fill: '#000' });
-                nextNonValueXOffset += this.operatorWidth;
-                this.notes.push(operator);
-                notesGroup.addChild(operator);
+        // prefix with operator, if needed
+        if (nextNonValueXOffset != 0) {
+            var operatorString = '';
+            switch (nodeConf.nodeType) {
+                case NodeTypeEnum.PLUS: operatorString = '+'; break;
+                case NodeTypeEnum.MINUS: operatorString = '-'; break;
+                case NodeTypeEnum.VALUE: operatorString = '='; break;
             }
-            tx = this.x + nextNonValueXOffset;
-            nextNonValueXOffset += this.operatorOffset;
-            ty = this.y + this.targetYOffset;
+            var operator = game.add.text(this.x + nextNonValueXOffset, this.y + this.operatorYOffset, operatorString, { fontSize: '32px', fill: '#000' });
+            nextNonValueXOffset += this.operatorWidth;
+            this.notes.push(operator);
+            notesGroup.addChild(operator);
         }
+        tx = this.x + nextNonValueXOffset;
+        nextNonValueXOffset += this.operatorOffset;
+        ty = this.y + this.targetYOffset;
         
         // Create the target
         var target = new Target(this.targetGroup).init(tx, ty);
@@ -83,6 +75,8 @@ Gate.prototype.init = function() {
             });
             console.log("g@" + thisGate.x + ", s=" + sum + ", expct=" + expectedValue);
             if (sum == expectedValue) {
+                // we know the gate value!
+                thisGate.value = expectedValue;
                 // disable modification
                 thisGate.lock();
                 // throw confetti
@@ -97,58 +91,14 @@ Gate.prototype.init = function() {
         };
         this.targets.push(new TargetNode(nodeConf.nodeType, target));
         
-        // If value is defined, fill it with a res
+        // If value is defined, fill it with a res, and lock it
         if (nodeConf.value !== undefined) {
             var res = createRes(nodeConf.value);
             target.putRes(res);
+            target.lock();
         }
     }
     
-/*
-    var valueText = game.add.text(this.x + (inputCount * this.targetStep - this.operatorWidth) / 2, this.y + this.valueYOffset, '' + this.value + ' =', { fontSize: '32px', fill: '#000' });
-    valueText.anchor.set(0.5);
-    this.notes.push(valueText);
-    notesGroup.addChild(valueText);
-    for (var i = 0 ; i < inputCount ; i++) {
-        var target = new Target(this.targetGroup).init(this.x + i * this.targetStep, this.y + this.targetYOffset);
-        if (i < inputCount - 1) {
-            // Add a + sign
-            var operator = game.add.text(this.x + i * this.targetStep + this.operatorOffset, this.y + this.operatorYOffset, '+', { fontSize: '32px', fill: '#000' });
-            this.notes.push(operator);
-            notesGroup.addChild(operator);
-        }
-        var thisGate = this;
-        target.onUpdate = function(res) {
-            var expectedValue = 0;
-            var sum = 0;
-            thisGate.targets.forEach(function(t) {
-                var target = t.target;
-                if (target.filled) {
-                    var occupiedValue = target.res.customValue;
-                    switch (t.nodeType) {
-                        case NodeTypeEnum.VALUE: expectedValue = occupiedValue; break;
-                        case NodeTypeEnum.PLUS: sum += occupiedValue; break;
-                        case NodeTypeEnum.MINUS: sum -= occupiedValue; break;
-                    }
-                }
-            });
-            console.log("g@" + thisGate.x + ", s=" + sum + ", expct=" + expectedValue);
-            if (sum == expectedValue) {
-                // disable modification
-                thisGate.lock();
-                // throw confetti
-                confetti(thisGate);
-                timer.repeat(thisGate.confettiDelay, expectedValue - 1, confetti, this, thisGate);
-                var lockdownTime = thisGate.confettiDelay * (expectedValue - 1);
-                // destroy afterwards
-                timer.add(lockdownTime, function() {
-                    thisGate.destroy();
-                }, thisGate);
-            }
-        };
-        this.targets.push(new TargetNode(NodeTypeEnum.PLUS, target));
-    }
-*/
     return this;
 }
 
