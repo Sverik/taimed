@@ -83,7 +83,9 @@ Gate.prototype.init = function() {
                 thisGate.lock();
                 // throw confetti
                 confetti(thisGate);
-                timer.repeat(thisGate.confettiDelay, expectedValue - 1, confetti, this, thisGate);
+                if (expectedValue > 1) {
+                    timer.repeat(thisGate.confettiDelay, expectedValue - 1, confetti, this, thisGate);
+                }
                 var lockdownTime = thisGate.confettiDelay * (expectedValue - 1);
                 // increment score
                 score += 10;

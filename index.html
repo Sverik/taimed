@@ -45,6 +45,8 @@ var timer;
 var emitter;
 
 var valueLimit = 5;
+var gatePos = [30, 290, 550];
+var activeGates = 0;
 
 function create() {
     timer = game.time.create(false);
@@ -119,11 +121,6 @@ function create() {
     emitter.makeParticles('star');
     emitter.gravity = 150;
     
-    // Gates
-    createGate(30, 300);
-    createGate(290, 300);
-    createGate(550, 300);
-    
 }
 
 function update() {
@@ -179,7 +176,14 @@ function update() {
         var res = createRes();
         target.putRes(res);
     });
-
+    
+    // Recreate gates, if needed
+    if (activeGates <= 0) {
+    	for (var i in gatePos) {
+    		var x = gatePos[i];
+    		createGate(x, 300);
+    	}
+    }
 }
 
 function confetti(gate) {
@@ -193,7 +197,7 @@ function createGate(x, y) {
     var value = Math.ceil(Math.random() * valueLimit);
     var a = Math.floor(Math.random() * value);
     var b = value - a;
-    // Dummy gate configuration
+    
     var conf = [
         {
             nodeType: NodeTypeEnum.PLUS,
@@ -211,9 +215,10 @@ function createGate(x, y) {
     
     var gate = new Gate(conf, x, y, targetGroup);
     gate.afterDestroy = function(thisGate) {
-        createGate(thisGate.x, thisGate.y);
+    	activeGates--;
     };
     gate.init();
+    activeGates++;
 }
 
 function createRes(value) {
