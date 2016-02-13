@@ -21,6 +21,8 @@ Target.prototype.lock = function(){
     if (this.res) {
         var thisRes = this.res;
         thisRes.frame = 1;
+        thisRes.input.disableDrag();
+        thisRes.input.useHandCursor = false;
         this.res.events.onInputOut.add(function() {
             thisRes.input.useHandCursor = false;
         });
