@@ -47,6 +47,7 @@ var emitter;
 var valueLimit = 5;
 var gatePos = [30, 290, 550];
 var activeGates = 0;
+var gateClearedActionRunning = false;
 
 function create() {
     timer = game.time.create(false);
@@ -65,20 +66,22 @@ function create() {
     platforms.enableBody = true;
 
     // Here we create the ground.
-    var ground = platforms.create(0, game.world.height - 64, 'ground');
+    var ground = platforms.create(0, game.world.height - 32, 'ground');
 
     //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    ground.scale.setTo(2, 2);
+    ground.scale.setTo(2, 1);
 
     //  This stops it from falling away when you jump on it
     ground.body.immovable = true;
 
     //  Now let's create two ledges
+/*
     var ledge = platforms.create(400, 400, 'ground');
     ledge.body.immovable = true;
 
     ledge = platforms.create(-150, 250, 'ground');
     ledge.body.immovable = true;
+*/
     
     notesGroup = game.add.group();
 
@@ -88,11 +91,11 @@ function create() {
     
     dispensers = new Array();
     for (var k = 0 ; k < 8 ; k++) {
-        createDispenser(70 + k * 85, 460);
+        createDispenser(70 + k * 85, 490);
     }
 
     // The player and its settings
-    player = game.add.sprite(32, game.world.height - 150, 'dude');
+    player = game.add.sprite(32, game.world.height - 100, 'dude');
 
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
@@ -120,6 +123,9 @@ function create() {
     emitter = game.add.emitter(0, 0, 100);
     emitter.makeParticles('star');
     emitter.gravity = 150;
+    
+    // Gates
+    initGates();
     
 }
 
@@ -177,13 +183,27 @@ function update() {
         target.putRes(res);
     });
     
-    // Recreate gates, if needed
-    if (activeGates <= 0) {
-    	for (var i in gatePos) {
-    		var x = gatePos[i];
-    		createGate(x, 300);
-    	}
+    // All gates cleared, do something.
+    if ( ! gateClearedActionRunning && activeGates <= 0) {
+    	gateClearedActionRunning = true;
+    	timer.add(300, addPrize, this);
     }
+}
+
+function addPrize() {
+    var prize = game.add.sprite(Math.random() * game.world.width, Math.random() * game.world.height - 130, 'dude');
+    prize.inputEnabled = true;
+    prize.input.enableDrag(false, true);
+    prize.input.useHandCursor = true;
+	timer.add(1100, initGates, this);
+}
+
+function initGates() {
+	for (var i in gatePos) {
+		var x = gatePos[i];
+		createGate(x, 360);
+	}
+    gateClearedActionRunning = false;
 }
 
 function confetti(gate) {
