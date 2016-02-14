@@ -44,7 +44,7 @@ var scoreText;
 var timer;
 var emitter;
 
-var valueLimit = 5;
+var valueLimit = 7;
 var gatePos = [30, 290, 550];
 var activeGates = 0;
 var gateClearedActionRunning = false;
@@ -175,13 +175,14 @@ function update() {
     }
     
     // Dispense new res, if needed.
-    dispensers.forEach(function(target) {
+    for (var k in dispensers) {
+    	var target = dispensers[k];
         if (target.filled) {
-            return;
+            continue;
         }
-        var res = createRes();
+        var res = createRes(k);
         target.putRes(res);
-    });
+    }
     
     // All gates cleared, do something.
     if ( ! gateClearedActionRunning && activeGates <= 0) {
@@ -191,7 +192,28 @@ function update() {
 }
 
 function addPrize() {
-    var prize = game.add.sprite(Math.random() * game.world.width, Math.random() * game.world.height - 130, 'dude');
+    var prize = game.add.sprite(game.world.width / 2, game.world.height - 300, 'dude');
+    var anim = Math.random();
+    if (anim < 0.3) {
+        prize.animations.add('left', [0, 1, 2, 3], 10, true);
+    	prize.animations.play('left');
+    } else if (anim < 0.6) {
+        prize.animations.add('right', [5, 6, 7, 8], 10, true);
+    	prize.animations.play('right');
+    } else {
+		prize.frame = 4;
+    	prize.animations.stop();
+    }
+    // prize.frame = Math.floor(Math.random() * prize.animations.frameTotal);
+	console.log("b " + prize.tint);
+	var color = Phaser.Color.HSVColorWheel(0.5, 0.8)[Math.floor(Math.random() * 360)];
+	var string = Phaser.Color.getColor(color.r, color.g, color.b);
+// 	for (var p in tint.rgba) {
+// 		console.log("tint.rgba" + p + " = " + tint.rgba[p]);
+// 	}
+	console.log("s " + string);
+    prize.tint = string;
+	console.log("a " + prize.tint);
     prize.inputEnabled = true;
     prize.input.enableDrag(false, true);
     prize.input.useHandCursor = true;
