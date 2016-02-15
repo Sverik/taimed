@@ -14,6 +14,7 @@
 
 <script type="text/javascript" src="js/Gate.js"></script>
 <script type="text/javascript" src="js/Target.js"></script>
+<script type="text/javascript" src="js/prizes.js"></script>
 <script type="text/javascript">
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'arvutused', { preload: preload, create: create, update: update });
@@ -204,16 +205,6 @@ function addPrize() {
 		prize.frame = 4;
     	prize.animations.stop();
     }
-    // prize.frame = Math.floor(Math.random() * prize.animations.frameTotal);
-	console.log("b " + prize.tint);
-	var color = Phaser.Color.HSVColorWheel(0.5, 0.8)[Math.floor(Math.random() * 360)];
-	var string = Phaser.Color.getColor(color.r, color.g, color.b);
-// 	for (var p in tint.rgba) {
-// 		console.log("tint.rgba" + p + " = " + tint.rgba[p]);
-// 	}
-	console.log("s " + string);
-    prize.tint = string;
-	console.log("a " + prize.tint);
     prize.inputEnabled = true;
     prize.input.enableDrag(false, true);
     prize.input.useHandCursor = true;
