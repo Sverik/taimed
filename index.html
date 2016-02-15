@@ -17,7 +17,7 @@
 <script type="text/javascript" src="js/prizes.js"></script>
 <script type="text/javascript">
 
-var game = new Phaser.Game(800, 600, Phaser.AUTO, 'arvutused', { preload: preload, create: create, update: update });
+var game = new Phaser.Game(800, 600, Phaser.AUTO, 'arvutused', { preload: preload, create: create, update: update }, false, false);
 
 function preload() {
 
@@ -28,6 +28,9 @@ function preload() {
     game.load.image('star', 'assets/star.png');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
     
+    prizeConf.forEach(function(conf){
+        game.load.spritesheet(conf.key, conf.url, conf.width, conf.height);
+    });
 }
 
 var player;
@@ -193,18 +196,16 @@ function update() {
 }
 
 function addPrize() {
-    var prize = game.add.sprite(game.world.width / 2, game.world.height - 300, 'dude');
-    var anim = Math.random();
-    if (anim < 0.3) {
-        prize.animations.add('left', [0, 1, 2, 3], 10, true);
-    	prize.animations.play('left');
-    } else if (anim < 0.6) {
-        prize.animations.add('right', [5, 6, 7, 8], 10, true);
-    	prize.animations.play('right');
-    } else {
-		prize.frame = 4;
-    	prize.animations.stop();
+	var conf = prizeConf[Math.floor(Math.random() * prizeConf.length)];
+    var prize = game.add.sprite(game.world.width / 2, game.world.height - 300, conf.key);
+    prize.scale.setTo(conf.scale);
+    // flip?
+    if (Math.random() < 0.5) {
+    	prize.anchor.setTo(0.5, 0.5);
+    	prize.scale.x *= -1;
     }
+    prize.animations.add(conf.key, conf.frames, conf.frameRate, true);
+   	prize.animations.play(conf.key);
     prize.inputEnabled = true;
     prize.input.enableDrag(false, true);
     prize.input.useHandCursor = true;
