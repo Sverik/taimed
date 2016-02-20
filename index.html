@@ -48,10 +48,20 @@ var scoreText;
 var timer;
 var emitter;
 
-var valueLimit = 7;
+var valueLimit = 10;
 var gatePos = [30, 290, 550];
 var activeGates = 0;
 var gateClearedActionRunning = false;
+
+var PrizeStatus = {
+	NA: 0,
+	ADDING: 1,
+	ANIMATING: 2,
+	UNLOCKING: 3,
+};
+
+var prizeStatus = PrizeStatus.NA;
+var prizeBeingOpened = null;
 
 function create() {
     timer = game.time.create(false);
@@ -94,12 +104,12 @@ function create() {
     targetGroup.enableBody =  true;
     
     dispensers = new Array();
-    for (var k = 0 ; k < 8 ; k++) {
-        createDispenser(70 + k * 85, 490);
+    for (var k = 0 ; k <= 10 ; k++) {
+        createDispenser(50 + k * 65, 480);
     }
 
     // The player and its settings
-    player = game.add.sprite(32, game.world.height - 100, 'dude');
+    player = game.add.sprite(16, game.world.height - 100, 'dude');
 
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
@@ -188,36 +198,59 @@ function update() {
         target.putRes(res);
     }
     
+    if (prizeStatus != PrizeStatus.ADDING && activeGates == 2) {
+    	prizeStatus = PrizeStatus.ADDING;
+    	timer.add(300, addPrize, this);
+    } else if (prizeStatus != PrizeStatus.ANIMATING && activeGates == 1) {
+    	prizeStatus = PrizeStatus.ANIMATING;
+    	timer.add(300, animatePrize, this);
+    } else if (prizeStatus != PrizeStatus.UNLOCKING && activeGates == 0) {
+    	prizeStatus = PrizeStatus.UNLOCKING;
+    	timer.add(300, unlockPrize, this);
+    }
+    
     // All gates cleared, do something.
+/*
     if ( ! gateClearedActionRunning && activeGates <= 0) {
     	gateClearedActionRunning = true;
-    	timer.add(300, addPrize, this);
+    	timer.add(300, unlockPrize, this);
     }
+*/
 }
 
 function addPrize() {
 	var conf = prizeConf[Math.floor(Math.random() * prizeConf.length)];
-    var prize = game.add.sprite(game.world.width / 2, game.world.height - 300, conf.key);
-    prize.scale.setTo(conf.scale);
+    prizeBeingOpened = game.add.sprite(game.world.width / 2, game.world.height - 300, conf.key);
+    prizeBeingOpened.scale.setTo(conf.scale);
     // flip?
     if (Math.random() < 0.5) {
-    	prize.anchor.setTo(0.5, 0.5);
-    	prize.scale.x *= -1;
+    	prizeBeingOpened.anchor.setTo(0.5, 0.5);
+    	prizeBeingOpened.scale.x *= -1;
     }
-    prize.animations.add(conf.key, conf.frames, conf.frameRate, true);
-   	prize.animations.play(conf.key);
-    prize.inputEnabled = true;
-    prize.input.enableDrag(false, true);
-    prize.input.useHandCursor = true;
+    prizeBeingOpened.tint = 0x000000;
+    prizeBeingOpened.animations.add('x', conf.frames, conf.frameRate, true);
+}
+
+function animatePrize() {
+    prizeBeingOpened.animations.play('x');
+}
+
+function unlockPrize() {
+    prizeBeingOpened.tint = 0xffffff;
+    prizeBeingOpened.inputEnabled = true;
+    prizeBeingOpened.input.enableDrag(false, true);
+    prizeBeingOpened.input.useHandCursor = true;
+    prizeBeingOpened = null;
 	timer.add(1100, initGates, this);
 }
 
 function initGates() {
 	for (var i in gatePos) {
 		var x = gatePos[i];
-		createGate(x, 360);
+		createGate(x, 380);
 	}
     gateClearedActionRunning = false;
+    prizeStatus = PrizeStatus.NA;
 }
 
 function confetti(gate) {
