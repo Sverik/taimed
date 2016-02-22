@@ -261,9 +261,18 @@ function confetti(gate) {
 }
 
 function createGate(x, y) {
+	var nodeType = Math.random() > 0.5 ? NodeTypeEnum.PLUS : NodeTypeEnum.MINUS;
     var value = Math.ceil(Math.random() * valueLimit);
     var a = Math.floor(Math.random() * value);
     var b = value - a;
+    if (nodeType == NodeTypeEnum.MINUS) {
+    	var m_a = value;
+    	var m_b = a;
+    	var m_v = b;
+    	a = m_a;
+    	b = m_b;
+    	value = m_v;
+    }
     
     var conf = [
         {
@@ -271,7 +280,7 @@ function createGate(x, y) {
             value: a
         },
         {
-            nodeType: NodeTypeEnum.PLUS,
+            nodeType: nodeType,
             value: b
         },
         {
