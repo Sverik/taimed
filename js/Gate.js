@@ -58,7 +58,7 @@ Gate.prototype.init = function() {
         ty = this.y + this.targetYOffset;
         
         // Create the target
-        var target = new Target(this.targetGroup).init(tx, ty);
+        var target = new Target(this.targetGroup, false).init(tx, ty);
         var thisGate = this;
         target.onUpdate = function(res) {
             var expectedValue = 0;

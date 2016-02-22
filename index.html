@@ -262,8 +262,14 @@ function confetti(gate) {
 
 function createGate(x, y) {
 	var nodeType = Math.random() > 0.5 ? NodeTypeEnum.PLUS : NodeTypeEnum.MINUS;
-    var value = Math.ceil(Math.random() * valueLimit);
-    var a = Math.floor(Math.random() * value);
+    var value1 = Math.ceil(Math.random() * valueLimit);
+    var value2 = Math.ceil(Math.random() * valueLimit);
+    // Gravitate towards bigger values.
+    var value = Math.max(value1, value2);
+    var a1 = Math.floor(Math.random() * value);
+    var a2 = Math.floor(Math.random() * value);
+    // Gravitate towards middle values.
+    var a = Math.floor((a1 + a2) / 2);
     var b = value - a;
     if (nodeType == NodeTypeEnum.MINUS) {
     	var m_a = value;
@@ -318,6 +324,10 @@ function createRes(value) {
         game.physics.arcade.overlap(star, targetGroup, function(star, targetSprite) {
             overlapped.push(targetSprite);
         }, function(star, targetSprite) {
+        	// Dispensers eat always.
+        	if (targetSprite.target.isDispenser) {
+        		return true;
+        	}
             if (targetSprite.target.locked || (targetSprite.target.filled && star.atTarget != targetSprite.target)) {
                 return false;
             }
@@ -338,6 +348,9 @@ function createRes(value) {
             // return to previous position
             star.x = star.dragStart.x;
             star.y = star.dragStart.y;
+        } else if (closest.target.isDispenser) {
+        	// dispensers just eat them
+        	collectStar(null, star);
         } else {
             // snap and put to closest target
             closest.target.putRes(star);
@@ -353,7 +366,7 @@ function createRes(value) {
 }
 
 function createDispenser(x, y) {
-    var target = new Target(targetGroup).init(x, y);
+    var target = new Target(targetGroup, true).init(x, y);
     dispensers.push(target);
 }
 

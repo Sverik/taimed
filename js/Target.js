@@ -1,8 +1,9 @@
-function Target(targetGroup) {
+function Target(targetGroup, isDispenser) {
     this.sprite = null;
     this.res = null;
     this.filled = false;
     this.locked = false;
+    this.isDispenser = isDispenser;
     this.targetGroup = targetGroup;
 }
 
