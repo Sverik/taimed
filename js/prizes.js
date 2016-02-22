@@ -23,6 +23,14 @@ var prizeConf = [ {
 	frames : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ],
 	frameRate : 10
 }, {
+	key : 'cat_jumpfall',
+	url : 'assets/cat_dog/Cat_JumpFall.png',
+	width : 108,
+	height : 95,
+	scale : 1,
+	frames : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ],
+	frameRate : 12
+}, {
 	key : 'cat_slide',
 	url : 'assets/cat_dog/Cat_Slide.png',
 	width : 108,
@@ -45,6 +53,14 @@ var prizeConf = [ {
 	height : 96,
 	scale : 1,
 	frames : [ 0, 1, 2, 3, 4, 5, 6, 7 ],
+	frameRate : 12
+}, {
+	key : 'dog_jumpfall',
+	url : 'assets/cat_dog/Dog_JumpFall.png',
+	width : 109,
+	height : 96,
+	scale : 1,
+	frames : [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ],
 	frameRate : 12
 }, {
 	key : 'dog_slide',
