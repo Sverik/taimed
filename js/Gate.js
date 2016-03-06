@@ -14,7 +14,7 @@
  *  }
  * ]
  */
-function Gate(configuration, x, y, targetGroup, gateBlockGroup) {
+function Gate(configuration, x, y, targetGroup, gateBlockGroup, gateProxGroup) {
     this.configuration = configuration;
     this.x = x;
     this.y = y;
@@ -30,7 +30,9 @@ function Gate(configuration, x, y, targetGroup, gateBlockGroup) {
     this.notes = new Array();
     this.targetGroup = targetGroup;
     this.gateBlockGroup = gateBlockGroup;
+    this.gateProxGroup = gateProxGroup;
     this.block = null;
+    this.proximity = null;
     this.afterDestroy = function() {};
 }
 
@@ -118,7 +120,15 @@ Gate.prototype.init = function() {
     this.block.renderable = false;
     this.block.width = maxX - minX;
     // TODO: unhardcode
-    this.block.height = 1;
+    this.block.height = 600;
+    
+    // create proximity block
+    this.proximity = gateProxGroup.create(minX - 8, 0);
+    this.proximity.body.immovable = true;
+    this.proximity.renderable = false;
+    this.proximity.width = maxX - minX + 8 + 8;
+    // TODO: unhardcode
+    this.proximity.height = 600;
     
     return this;
 }
@@ -149,6 +159,8 @@ Gate.prototype.destroy = function() {
     });
     // destroy block
     this.block.destroy();
+    // destroy proximity
+    this.proximity.destroy();
     // create new Gate
     this.afterDestroy(this);
 }

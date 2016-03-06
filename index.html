@@ -40,6 +40,7 @@ var cursors;
 
 var targetGroup;
 var gateBlockGroup;
+var gateProxGroup;
 var notesGroup;
 var dispensers;
 
@@ -51,9 +52,10 @@ var timer;
 var emitter;
 
 var valueLimit = 10;
-var gatePos = [30, 290, 550];
 var activeGates = 0;
 var gateClearedActionRunning = false;
+
+var running = false;
 
 var PrizeStatus = {
 	NA: 0,
@@ -72,7 +74,7 @@ function create() {
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
     
-    game.world.resize(3000, 600);
+    game.world.resize(5000, 600);
 
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky').scale.setTo(20, 1);
@@ -113,6 +115,10 @@ function create() {
     // blockers
     gateBlockGroup = game.add.group();
     gateBlockGroup.enableBody =  true;
+    
+    // gate proximity
+    gateProxGroup = game.add.group();
+    gateProxGroup.enableBody =  true;
     
     dispensers = new Array();
     for (var k = 0 ; k <= 10 ; k++) {
@@ -165,6 +171,11 @@ function update() {
     
     game.physics.arcade.collide(player, gateBlockGroup);
     
+    running = true;
+    game.physics.arcade.overlap(player, gateProxGroup, function(player, prox){
+    	running = false;
+    });
+    
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.arcade.overlap(player, stars, collectStar, function(player, star){
         // locked res cannot be picked up by the player
@@ -183,7 +194,7 @@ function update() {
 
         player.animations.play('left');
     }
-    else if (cursors.right.isDown)
+    else if (cursors.right.isDown || running)
     {
         //  Move to the right
         player.body.velocity.x = 150;
@@ -214,6 +225,7 @@ function update() {
         target.putRes(res);
     }
     
+/*
     if (prizeStatus != PrizeStatus.ADDING && activeGates == 2) {
     	prizeStatus = PrizeStatus.ADDING;
     	timer.add(300, addPrize, this);
@@ -224,14 +236,11 @@ function update() {
     	prizeStatus = PrizeStatus.UNLOCKING;
     	timer.add(300, unlockPrize, this);
     }
-    
-    // All gates cleared, do something.
-/*
-    if ( ! gateClearedActionRunning && activeGates <= 0) {
-    	gateClearedActionRunning = true;
-    	timer.add(300, unlockPrize, this);
-    }
 */
+	if (prizeStatus != PrizeStatus.UNLOCKING && activeGates == 0) {
+		prizeStatus = PrizeStatus.UNLOCKING;
+		timer.add(300, unlockPrize, this);
+	}
 }
 
 function addPrize() {
@@ -252,19 +261,19 @@ function animatePrize() {
 }
 
 function unlockPrize() {
-    prizeBeingOpened.tint = 0xffffff;
+/*
+	prizeBeingOpened.tint = 0xffffff;
     prizeBeingOpened.inputEnabled = true;
     prizeBeingOpened.input.enableDrag(false, true);
     prizeBeingOpened.input.useHandCursor = true;
     prizeBeingOpened = null;
+*/
 	timer.add(1100, initGates, this);
 }
 
 function initGates() {
-	for (var i in gatePos) {
-		var x = gatePos[i];
-		createGate(x, 500);
-	}
+	console.log("init gate " + (player.body.x + 500));
+	createGate(player.x + 500, 500);
     gateClearedActionRunning = false;
     prizeStatus = PrizeStatus.NA;
 }
@@ -311,7 +320,7 @@ function createGate(x, y) {
         }
     ];
     
-    var gate = new Gate(conf, x, y, targetGroup, gateBlockGroup);
+    var gate = new Gate(conf, x, y, targetGroup, gateBlockGroup, gateProxGroup);
     gate.afterDestroy = function(thisGate) {
     	activeGates--;
     };
