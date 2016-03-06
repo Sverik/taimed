@@ -9,6 +9,7 @@ function Target(targetGroup, isDispenser) {
 
 Target.prototype.init = function(x, y) {
     this.sprite = this.targetGroup.create(x, y, 'asukoht');
+    this.sprite.fixedToCamera = this.isDispenser;
     this.sprite.body.immovable = true;
     this.sprite.target = this;
     return this;
@@ -35,8 +36,17 @@ Target.prototype.destroy = function(){
 }
 
 Target.prototype.putRes = function(res){
-    res.x = this.sprite.x;
-    res.y = this.sprite.y;
+	console.log("putting 1 " + res.x);
+    res.fixedToCamera = this.sprite.fixedToCamera;
+    console.log("putting 2 " + res.fixedToCamera);
+	if (this.sprite.fixedToCamera) {
+	    res.cameraOffset.x = this.sprite.cameraOffset.x;
+	    res.cameraOffset.y = this.sprite.cameraOffset.y;
+	} else {
+	    res.x = this.sprite.x;
+	    res.y = this.sprite.y;
+	}
+	console.log("putting 3 " + res.x);
     // set old target empty, if it existed
     var oldTarget = null;
     if (res.atTarget) {

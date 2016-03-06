@@ -113,13 +113,12 @@ Gate.prototype.init = function() {
     }
     
     // create tall block
-    console.log(minX + "..." + maxX);
     this.block = gateBlockGroup.create(minX,0);
     this.block.body.immovable = true;
     this.block.renderable = false;
     this.block.width = maxX - minX;
     // TODO: unhardcode
-    this.block.height = 600;
+    this.block.height = 1;
     
     return this;
 }

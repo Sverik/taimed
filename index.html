@@ -333,7 +333,9 @@ function createRes(value) {
     star.events.onDragStart.add(function(){
         star.dragStart = {
             x: star.x,
-            y: star.y
+            y: star.y,
+            co_x: star.cameraOffset.x,
+            co_y: star.cameraOffset.y
         };
     }, this);
     star.events.onDragStop.add(function(){
@@ -363,8 +365,13 @@ function createRes(value) {
         
         if (closest == null) {
             // return to previous position
-            star.x = star.dragStart.x;
-            star.y = star.dragStart.y;
+            if (star.fixedToCamera) {
+                star.cameraOffset.x = star.dragStart.co_x;
+                star.cameraOffset.y = star.dragStart.co_y;
+            } else {
+                star.x = star.dragStart.x;
+                star.y = star.dragStart.y;
+            }
         } else if (closest.target.isDispenser) {
         	// dispensers just eat them
         	collectStar(null, star);
@@ -378,6 +385,8 @@ function createRes(value) {
     star.customText = game.add.text(28, 26, star.customValue.toString(), { font: "24px Arial", fill: "#112200", wordWrap: true, wordWrapWidth: star.width, align: "center" });
     star.customText.anchor.set(0.5);
     star.addChild(star.customText);
+    console.log(star.body.x);
+    star.fixedToCamera = true;
     
     return star;
 }
