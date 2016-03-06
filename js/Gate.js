@@ -14,7 +14,7 @@
  *  }
  * ]
  */
-function Gate(configuration, x, y, targetGroup) {
+function Gate(configuration, x, y, targetGroup, gateBlockGroup) {
     this.configuration = configuration;
     this.x = x;
     this.y = y;
@@ -29,12 +29,16 @@ function Gate(configuration, x, y, targetGroup) {
     this.targets = new Array(); // of TargetNodes
     this.notes = new Array();
     this.targetGroup = targetGroup;
+    this.gateBlockGroup = gateBlockGroup;
+    this.block = null;
     this.afterDestroy = function() {};
 }
 
 Gate.prototype.init = function() {
     var nextNonValueXOffset = 0;
     this.targetCount = this.configuration.length;
+    var minX = 100000;
+    var maxX = -100000;
     for (var i = 0 ; i < this.configuration.length ; i++) {
         var nodeConf = this.configuration[i];
         // Target coordinates
@@ -48,7 +52,7 @@ Gate.prototype.init = function() {
                 case NodeTypeEnum.MINUS: operatorString = '-'; break;
                 case NodeTypeEnum.VALUE: operatorString = '='; break;
             }
-            var operator = game.add.text(this.x + nextNonValueXOffset, this.y + this.operatorYOffset, operatorString, { fontSize: '32px', fill: '#000' });
+            var operator = game.add.text(this.x + nextNonValueXOffset, this.y + this.operatorYOffset, operatorString, { fontSize: '32px', fill: '#fff' });
             nextNonValueXOffset += this.operatorWidth;
             this.notes.push(operator);
             notesGroup.addChild(operator);
@@ -59,6 +63,8 @@ Gate.prototype.init = function() {
         
         // Create the target
         var target = new Target(this.targetGroup, false).init(tx, ty);
+        minX = Math.min(minX, tx);
+        maxX = Math.max(maxX, tx + target.getWidth());
         var thisGate = this;
         target.onUpdate = function(res) {
             var expectedValue = 0;
@@ -106,6 +112,15 @@ Gate.prototype.init = function() {
         }
     }
     
+    // create tall block
+    console.log(minX + "..." + maxX);
+    this.block = gateBlockGroup.create(minX,0);
+    this.block.body.immovable = true;
+    this.block.renderable = false;
+    this.block.width = maxX - minX;
+    // TODO: unhardcode
+    this.block.height = 600;
+    
     return this;
 }
 
@@ -133,6 +148,8 @@ Gate.prototype.destroy = function() {
     this.notes.forEach(function(n) {
         n.destroy();
     });
+    // destroy block
+    this.block.destroy();
     // create new Gate
     this.afterDestroy(this);
 }

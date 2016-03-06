@@ -22,6 +22,7 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, 'arvutused', { preload: preloa
 function preload() {
 
     game.load.image('sky', 'assets/sky.png');
+    game.load.image('cityscape', 'assets/city.png');
     game.load.spritesheet('kast', 'assets/sinine_kast.png', 48, 48);
     game.load.image('asukoht', 'assets/koht.png');
     game.load.image('ground', 'assets/platform.png');
@@ -38,6 +39,7 @@ var platforms;
 var cursors;
 
 var targetGroup;
+var gateBlockGroup;
 var notesGroup;
 var dispensers;
 
@@ -69,10 +71,15 @@ function create() {
     
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
+    
+    game.world.resize(3000, 600);
 
     //  A simple background for our game
-    game.add.sprite(0, 0, 'sky');
+    game.add.sprite(0, 0, 'sky').scale.setTo(20, 1);
 
+    //  A simple background for our game
+    game.add.sprite(0, 68, 'cityscape').scale.setTo(1, 1);
+    
     //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = game.add.group();
     
@@ -83,7 +90,7 @@ function create() {
     var ground = platforms.create(0, game.world.height - 32, 'ground');
 
     //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    ground.scale.setTo(2, 1);
+    ground.scale.setTo(20, 1);
 
     //  This stops it from falling away when you jump on it
     ground.body.immovable = true;
@@ -103,16 +110,22 @@ function create() {
     targetGroup = game.add.group();
     targetGroup.enableBody =  true;
     
+    // blockers
+    gateBlockGroup = game.add.group();
+    gateBlockGroup.enableBody =  true;
+    
     dispensers = new Array();
     for (var k = 0 ; k <= 10 ; k++) {
-        createDispenser(50 + k * 65, 480);
+        createDispenser(50 + k * 65, 40);
     }
 
     // The player and its settings
-    player = game.add.sprite(16, game.world.height - 100, 'dude');
+    player = game.add.sprite(0, game.world.height - 100, 'dude');
 
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
+    
+    game.camera.follow(player);
 
     //  Player physics properties. Give the little guy a slight bounce.
     player.body.bounce.y = 0.2;
@@ -129,6 +142,7 @@ function create() {
 
     //  The score
     scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+    scoreText.fixedToCamera = true;
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
@@ -148,6 +162,8 @@ function update() {
     //  Collide the player and the stars with the platforms
     game.physics.arcade.collide(player, platforms);
     game.physics.arcade.collide(stars, platforms);
+    
+    game.physics.arcade.collide(player, gateBlockGroup);
     
     //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
     game.physics.arcade.overlap(player, stars, collectStar, function(player, star){
@@ -247,7 +263,7 @@ function unlockPrize() {
 function initGates() {
 	for (var i in gatePos) {
 		var x = gatePos[i];
-		createGate(x, 380);
+		createGate(x, 500);
 	}
     gateClearedActionRunning = false;
     prizeStatus = PrizeStatus.NA;
@@ -295,7 +311,7 @@ function createGate(x, y) {
         }
     ];
     
-    var gate = new Gate(conf, x, y, targetGroup);
+    var gate = new Gate(conf, x, y, targetGroup, gateBlockGroup);
     gate.afterDestroy = function(thisGate) {
     	activeGates--;
     };
@@ -310,6 +326,7 @@ function createRes(value) {
 
     var star = stars.create(90, game.world.height - 150, 'kast');
     
+    star.body.immovable = true;
     star.inputEnabled = true;
     star.input.enableDrag(false, true);
     star.input.useHandCursor = true;

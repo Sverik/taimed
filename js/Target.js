@@ -55,3 +55,7 @@ Target.prototype.putRes = function(res){
         oldTarget.onUpdate(null);
     }
 }
+
+Target.prototype.getWidth = function() {
+	return this.sprite.width;
+}
