@@ -94,7 +94,8 @@ Gate.prototype.init = function() {
                 if (expectedValue > 1) {
                     timer.repeat(thisGate.confettiDelay, expectedValue - 1, confetti, this, thisGate);
                 }
-                var lockdownTime = thisGate.confettiDelay * (expectedValue - 1);
+//                 var lockdownTime = thisGate.confettiDelay * (expectedValue - 1);
+                var lockdownTime = thisGate.confettiDelay;
                 // increment score
                 score += 10;
                 scoreText.text = 'Score: ' + score;

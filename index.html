@@ -136,7 +136,7 @@ function create() {
     //  Player physics properties. Give the little guy a slight bounce.
     player.body.bounce.y = 0.2;
     player.body.gravity.y = 300;
-    player.body.collideWorldBounds = true;
+//    player.body.collideWorldBounds = true;
 
     //  Our two animations, walking left and right.
     player.animations.add('left', [0, 1, 2, 3], 10, true);
@@ -176,14 +176,6 @@ function update() {
     	running = false;
     });
     
-    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    game.physics.arcade.overlap(player, stars, collectStar, function(player, star){
-        // locked res cannot be picked up by the player
-        if (star.atTarget && star.atTarget.locked) {
-            return false;
-        }
-    }, this);
-
     //  Reset the players velocity (movement)
     player.body.velocity.x = 0;
 
@@ -224,6 +216,8 @@ function update() {
         var res = createRes(k);
         target.putRes(res);
     }
+    
+    game.world.wrap(player, 0, true);
     
 /*
     if (prizeStatus != PrizeStatus.ADDING && activeGates == 2) {
@@ -272,8 +266,12 @@ function unlockPrize() {
 }
 
 function initGates() {
-	console.log("init gate " + (player.body.x + 500));
-	createGate(player.x + 500, 500);
+    var placeAt = player.body.x + 240;
+    if (placeAt + 80 > game.world.width) {
+        placeAt = 240;
+    }
+	console.log("init gate " + placeAt);
+	createGate(placeAt, 500);
     gateClearedActionRunning = false;
     prizeStatus = PrizeStatus.NA;
 }
