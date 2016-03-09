@@ -212,12 +212,12 @@ function update() {
     }
     
     // wrap, if needed
-    if (! wrapping && player.body.x > BACKGROUND_WIDTH + this.game.width) {
+    if (/*! wrapping && */player.body.x > BACKGROUND_WIDTH + this.game.width) {
     	wrapping = true;
     	var wrapTo = player.body.x % BACKGROUND_WIDTH;
-    	console.log("wrapping at " + player.body.x + ", to " + wrapTo);
+//     	console.log("wrapping at " + player.body.x + ", to " + wrapTo);
     	this.game.world.wrap(player, -wrapTo, false, true, false);
-    	console.log("wrapped to " + player.body.x);
+//     	console.log("wrapped to " + player.body.x);
     } else if (wrapping && player.body.x <= BACKGROUND_WIDTH + this.game.width) {
     	console.log("wrap completed");
     	wrapping = false;
@@ -430,10 +430,6 @@ function collectStar (player, star) {
         star.atTarget.res = null;
         star.atTarget.onUpdate(null);
     }
-
-    //  Add and update the score
-    score += 10;
-    scoreText.text = 'Score: ' + score;
 
 }
 
