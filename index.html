@@ -51,7 +51,7 @@ var scoreText;
 var timer;
 var emitter;
 
-var valueLimit = 10;
+var valueLimit = 20;
 var activeGates = 0;
 var gateClearedActionRunning = false;
 
@@ -125,8 +125,14 @@ function create() {
     gateProxGroup.enableBody =  true;
     
     dispensers = new Array();
-    for (var k = 0 ; k <= 10 ; k++) {
-        createDispenser(50 + k * 65, 40);
+    var y = 50;
+    var xo = 50;
+    for (var k = 0 ; k <= valueLimit ; k++) {
+    	if (k == 11) {
+    		y = 100;
+    		xo += 65;
+    	}
+        createDispenser(xo + (k % 11) * 65, y);
     }
 
     // The player and its settings
@@ -300,13 +306,13 @@ function confetti(gate) {
 }
 
 function createGate(x, y) {
-	var nodeType = Math.random() > 0.5 ? NodeTypeEnum.PLUS : NodeTypeEnum.MINUS;
-    var value1 = Math.ceil(Math.random() * valueLimit);
-    var value2 = Math.ceil(Math.random() * valueLimit);
+ 	var nodeType = Math.random() > 0.5 ? NodeTypeEnum.PLUS : NodeTypeEnum.MINUS;
+    var value1 = Math.ceil(Math.random() * (valueLimit + 1)) - 1;
+    var value2 = Math.ceil(Math.random() * (valueLimit + 1)) - 1;
     // Gravitate towards bigger values.
     var value = Math.max(value1, value2);
-    var a1 = Math.floor(Math.random() * value);
-    var a2 = Math.floor(Math.random() * value);
+    var a1 = Math.floor(Math.random() * (value + 1));
+    var a2 = Math.floor(Math.random() * (value + 1));
     // Gravitate towards middle values.
     var a = Math.floor((a1 + a2) / 2);
     var b = value - a;
@@ -408,7 +414,6 @@ function createRes(value) {
     star.customText = game.add.text(28, 26, star.customValue.toString(), { font: "24px Arial", fill: "#112200", wordWrap: true, wordWrapWidth: star.width, align: "center" });
     star.customText.anchor.set(0.5);
     star.addChild(star.customText);
-    console.log(star.body.x);
     star.fixedToCamera = true;
     
     return star;
