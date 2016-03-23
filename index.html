@@ -51,7 +51,7 @@ var scoreText;
 var timer;
 var emitter;
 
-var valueLimit = 20;
+var valueLimit = 1;
 var activeGates = 0;
 var gateClearedActionRunning = false;
 
@@ -125,14 +125,8 @@ function create() {
     gateProxGroup.enableBody =  true;
     
     dispensers = new Array();
-    var y = 50;
-    var xo = 50;
     for (var k = 0 ; k <= valueLimit ; k++) {
-    	if (k == 11) {
-    		y = 100;
-    		xo += 65;
-    	}
-        createDispenser(xo + (k % 11) * 65, y);
+        createDispenser(k);
     }
 
     // The player and its settings
@@ -343,6 +337,10 @@ function createGate(x, y) {
     var gate = new Gate(conf, x, y, targetGroup, gateBlockGroup, gateProxGroup);
     gate.afterDestroy = function(thisGate) {
     	activeGates--;
+    	if (valueLimit < 20) {
+    		valueLimit++;
+    		createDispenser(valueLimit);
+    	}
     };
     gate.init();
     activeGates++;
@@ -419,7 +417,12 @@ function createRes(value) {
     return star;
 }
 
-function createDispenser(x, y) {
+function createDispenser(k) {
+	var x = 115 + 65 * (k % 11);
+	if (k <= 10) {
+		x -= 65;
+	}
+	var y = 50 + (50 * Math.floor(k / 11));
     var target = new Target(targetGroup, true).init(x, y);
     dispensers.push(target);
 }
