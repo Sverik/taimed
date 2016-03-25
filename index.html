@@ -51,6 +51,7 @@ var scoreText;
 var timer;
 var emitter;
 
+var MAX_VALUE_LIMIT = 14;
 var valueLimit = 1;
 var activeGates = 0;
 var gateClearedActionRunning = false;
@@ -337,7 +338,7 @@ function createGate(x, y) {
     var gate = new Gate(conf, x, y, targetGroup, gateBlockGroup, gateProxGroup);
     gate.afterDestroy = function(thisGate) {
     	activeGates--;
-    	if (valueLimit < 20) {
+    	if (score % 50 == 0 && valueLimit < MAX_VALUE_LIMIT) {
     		valueLimit++;
     		createDispenser(valueLimit);
     	}
@@ -425,6 +426,13 @@ function createDispenser(k) {
 	var y = 50 + (50 * Math.floor(k / 11));
     var target = new Target(targetGroup, true).init(x, y);
     dispensers.push(target);
+    if (k > 0) {
+	    var emitter = game.add.emitter(target.getWidth() / 2, target.getWidth() / 2, 100);
+	    target.sprite.addChild(emitter);
+	    emitter.makeParticles('star');
+	    emitter.gravity = 150;
+	    emitter.start(false, 7000, 400, k);
+    }
 }
 
 function collectStar (player, star) {
