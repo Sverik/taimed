@@ -2,7 +2,7 @@
 <html lang="en"> 
 <head> 
 	<meta charset="UTF-8" />
-    <title>Phaser - Making your first game, part 9</title>
+    <title>L-Plants</title>
     <script src="//cdn.jsdelivr.net/phaser/2.2.2/phaser.min.js"></script>
     <style type="text/css">
         body {
@@ -15,6 +15,12 @@
 <script type="text/javascript" src="js/Gate.js"></script>
 <script type="text/javascript" src="js/Target.js"></script>
 <script type="text/javascript" src="js/prizes.js"></script>
+<script type="text/javascript" src="js/DNA.js"></script>
+<script type="text/javascript" src="js/BlockType.js"></script>
+<script type="text/javascript" src="js/Block.js"></script>
+<script type="text/javascript" src="js/Plant.js"></script>
+<script type="text/javascript" src="js/Rule.js"></script>
+<script type="text/javascript" src="js/Production.js"></script>
 <script type="text/javascript">
 
 var game = new Phaser.Game(800, 600, Phaser.AUTO, 'arvutused', { preload: preload, create: create, update: update }, false, false);
@@ -37,6 +43,10 @@ function preload() {
 var player;
 var platforms;
 var cursors;
+
+var plants;
+
+var plantsGroup;
 
 var targetGroup;
 var gateBlockGroup;
@@ -78,7 +88,7 @@ function create() {
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
     
-    game.world.resize(5000, 600);
+    game.world.resize(800, 600);
 
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky').scale.setTo(20, 1);
@@ -94,7 +104,7 @@ function create() {
     platforms.enableBody = true;
 
     // Here we create the ground.
-    var ground = platforms.create(0, game.world.height - 32, 'ground');
+    var ground = platforms.create(0, game.world.height - 8, 'ground');
 
     //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
     ground.scale.setTo(20, 1);
@@ -112,6 +122,20 @@ function create() {
 */
     
     notesGroup = game.add.group();
+    
+    // plants
+    plantsGroup = game.add.group();
+    plantsGroup.enableBody = true;
+    plants = new Array();
+    
+    // plant
+    var dna = new DNA();
+    var rule = new Rule(new Production(BlockType.A, [BlockType.A, BlockType.A]));
+    dna.rules.push(rule);
+    var block = new Block(BlockType.A, dna);
+    var plant = new Plant(game, plantsGroup);
+    plant.init(dna, BlockType.A, 150);
+    plants.push(plant);
 
     // targets
     targetGroup = game.add.group();
@@ -169,6 +193,11 @@ function create() {
 }
 
 function update() {
+	
+	// Update plants
+	plants.forEach(function(p){
+		p.update();
+	});
 
     //  Collide the player and the stars with the platforms
     game.physics.arcade.collide(player, platforms);
