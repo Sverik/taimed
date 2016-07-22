@@ -12,7 +12,7 @@ function Plant(game, plantsGroup) {
  * @param x float, position
  */
 Plant.prototype.init = function(dna, variable, x) {
-	this.seedBlock = new Block(Alphabet.SEED, new DNA(), null);
+	this.seedBlock = new Block(Alphabet.SEED, new DNA(), null, this);
 	var seedGroup = this.game.add.group();
 	seedGroup.x = x;
 	seedGroup.y = 550;
@@ -26,7 +26,7 @@ Plant.prototype.init = function(dna, variable, x) {
 
 Plant.prototype.update = function() {
 	var thisPlant = this;
-	if (Math.random() < 0.1) {
+	if (Math.random() < -0.1) {
 		var newBlocks = new Array();
 		thisPlant.blocks.forEach(function(b){
 			b.dna.rules.forEach(function(r){
@@ -51,9 +51,17 @@ Plant.prototype._addChild = function(variable, dna, parent) {
 	group.x = 0;
 	group.y = -20;
 	// TODO: for testing only
-	group.rotation = Math.PI / 4.5;
+	group.rotation = Math.PI * (Math.random() - 0.5);
+	console.log("in parent.group before:");
+	parent.containerGroup.forEach(function(group) {
+		console.log(group);
+	});
 	parent.containerGroup.add(group);
-	var block = new Block(variable, dna, parent);
+	console.log("in parent.group after:");
+	parent.containerGroup.forEach(function(group) {
+		console.log(group);
+	});
+	var block = new Block(variable, dna, parent, this);
 	block.init(group);
 	return block;
 }
@@ -61,7 +69,7 @@ Plant.prototype._addChild = function(variable, dna, parent) {
 /**
  * 
  * @param rule {@link #Rule}
- * @param predBlock predecessor {@link #Block}
+ * @param predBlock predecessor {@link #Block} block that is being replaced
  * @param newBlocks Array of new Block/s that are created
  */
 Plant.prototype._produce = function(rule, predBlock, newBlocks) {
@@ -72,7 +80,20 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 	 * Rotate and translate child groups accordingly.
 	 * Move all children of predBlock to the last successor.
 	 */
+	// Remove
+	console.log(predBlock.parent.containerGroup.remove(predBlock.containerGroup));
+	this.blocks.splice(this.blocks.indexOf(predBlock), 1);
+	
 	console.log('production happens');
-	var block = this._addChild(rule.production.successor[0], predBlock.dna, predBlock);
+	var block = this._addChild(rule.production.successor[Math.floor(Math.random() * 2)], predBlock.dna, predBlock.parent);
 	newBlocks.push(block);
+	// Move children to new parent
+	var toBeMoved = new Array();
+	predBlock.containerGroup.iterate("backRefBlockExists", true, Phaser.Group.RETURN_NONE, function(childGroup) {
+		toBeMoved.push(childGroup);
+	}, this);
+	toBeMoved.forEach(function(childGroup) {
+		block.containerGroup.add(childGroup);
+		childGroup.backRefBlock.parent = block;
+	});
 }
