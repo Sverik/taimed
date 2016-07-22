@@ -16,7 +16,6 @@
 <script type="text/javascript" src="js/Target.js"></script>
 <script type="text/javascript" src="js/prizes.js"></script>
 <script type="text/javascript" src="js/DNA.js"></script>
-<script type="text/javascript" src="js/BlockType.js"></script>
 <script type="text/javascript" src="js/Block.js"></script>
 <script type="text/javascript" src="js/Plant.js"></script>
 <script type="text/javascript" src="js/Rule.js"></script>
@@ -32,6 +31,8 @@ function preload() {
     game.load.spritesheet('kast', 'assets/sinine_kast.png', 48, 48);
     game.load.image('asukoht', 'assets/koht.png');
     game.load.image('ground', 'assets/platform.png');
+    game.load.image('variable_a', 'assets/platform.png');
+    game.load.image('variable_b', 'assets/platform_red.png');
     game.load.image('star', 'assets/star.png');
     game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
     
@@ -130,11 +131,10 @@ function create() {
     
     // plant
     var dna = new DNA();
-    var rule = new Rule(new Production(BlockType.A, [BlockType.A, BlockType.A]));
+    var rule = new Rule(new Production(Alphabet.A, [Alphabet.A, Alphabet.B]));
     dna.rules.push(rule);
-    var block = new Block(BlockType.A, dna);
     var plant = new Plant(game, plantsGroup);
-    plant.init(dna, BlockType.A, 150);
+    plant.init(dna, Alphabet.A, 150);
     plants.push(plant);
 
     // targets
