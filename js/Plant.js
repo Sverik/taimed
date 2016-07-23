@@ -14,6 +14,7 @@ function Plant(game, plantsGroup) {
 Plant.prototype.init = function(dna, variable, x) {
 	this.seedBlock = new Block(Alphabet.SEED, new DNA(), null, this);
 	var seedGroup = this.game.add.group();
+	seedGroup.debugId = "seed";
 	seedGroup.x = x;
 	seedGroup.y = 550;
 	this.plantsGroup.add(seedGroup);
@@ -46,19 +47,23 @@ Plant.prototype.update = function() {
  * @param dna {@link #DNA}
  * @param parent {@link #Block}
  */
+var plantIdSeq = 0;
 Plant.prototype._addChild = function(variable, dna, parent) {
 	var group = this.game.add.group();
+	group.debugId = "id" + (++plantIdSeq);
 	group.x = 0;
 	group.y = -20;
 	// TODO: for testing only
 	group.rotation = Math.PI * (Math.random() - 0.5);
 	console.log("in parent.group before:");
 	parent.containerGroup.forEach(function(group) {
+		console.log(group["debugId"] + ":");
 		console.log(group);
 	});
 	parent.containerGroup.add(group);
 	console.log("in parent.group after:");
 	parent.containerGroup.forEach(function(group) {
+		console.log(group["debugId"] + ":");
 		console.log(group);
 	});
 	var block = new Block(variable, dna, parent, this);
@@ -80,13 +85,20 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 	 * Rotate and translate child groups accordingly.
 	 * Move all children of predBlock to the last successor.
 	 */
+	console.log("in predBlock.parent.containerGroup before removal:");
+	predBlock.parent.containerGroup.forEach(function(group) {
+		console.log(group["debugId"] + ":");
+		console.log(group);
+	});
 	// Remove
 	console.log(predBlock.parent.containerGroup.remove(predBlock.containerGroup));
 	this.blocks.splice(this.blocks.indexOf(predBlock), 1);
-	
+
+	// Add new children
 	console.log('production happens');
 	var block = this._addChild(rule.production.successor[Math.floor(Math.random() * 2)], predBlock.dna, predBlock.parent);
 	newBlocks.push(block);
+
 	// Move children to new parent
 	var toBeMoved = new Array();
 	predBlock.containerGroup.iterate("backRefBlockExists", true, Phaser.Group.RETURN_NONE, function(childGroup) {
@@ -96,4 +108,7 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 		block.containerGroup.add(childGroup);
 		childGroup.backRefBlock.parent = block;
 	});
+	
+	// Destroy predBlock
+	predBlock.containerGroup.destroy(true);
 }

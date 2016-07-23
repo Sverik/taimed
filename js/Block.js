@@ -11,6 +11,7 @@ function Block(variable, dna, parent, plant) {
 	this.sprite = null;
 }
 
+var blockIdSeq = 1000;
 /**
  * 
  * @param plant
@@ -28,6 +29,7 @@ Block.prototype.init = function(containerGroup) {
 		bitmap = 'variable_b';
 	}
 	this.sprite = this.containerGroup.create(0, 0, bitmap);
+	this.sprite.debugId = "id" + (++blockIdSeq);
 	this.sprite.inputEnabled = true;
 	this.sprite.input.useHandCursor = true;
 //	this.sprite.tint = Math.random() * 0xffffff;
@@ -42,6 +44,7 @@ Block.prototype.init = function(containerGroup) {
 	this.sprite.events.onInputUp.add(function(obj, pointer) {
 		if (pointer.button == 0) {
 			console.log("producing");
+			console.log(thisBlock.containerGroup["debugId"]);
 			thisBlock.plant._produce(thisBlock.dna.rules[0], thisBlock, thisBlock.plant.blocks);
 			console.log(thisBlock.plant.blocks.length);
 		} else {
