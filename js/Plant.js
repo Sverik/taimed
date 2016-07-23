@@ -1,5 +1,6 @@
-function Plant(game, plantsGroup) {
-	this.game = game;
+var UPDATE_PROB = -0.1;
+
+function Plant(plantsGroup) {
 	this.blocks = new Array();
 	this.plantsGroup = plantsGroup;
 	this.seedBlock = null;
@@ -13,7 +14,7 @@ function Plant(game, plantsGroup) {
  */
 Plant.prototype.init = function(dna, variable, x) {
 	this.seedBlock = new Block(Alphabet.SEED, new DNA(), null, this);
-	var seedGroup = this.game.add.group();
+	var seedGroup = game.add.group();
 	seedGroup.debugId = "seed";
 	seedGroup.x = x;
 	seedGroup.y = 550;
@@ -26,19 +27,25 @@ Plant.prototype.init = function(dna, variable, x) {
 }
 
 Plant.prototype.update = function() {
-	var thisPlant = this;
-	if (Math.random() < -0.1) {
-		var newBlocks = new Array();
-		thisPlant.blocks.forEach(function(b){
-			b.dna.rules.forEach(function(r){
-				if (r.checkCondition(b)) {
-					thisPlant._produce(r, b, newBlocks);
-				}
-			});
-		});
-		this.blocks = this.blocks.concat(newBlocks);
-		console.log("blocks count: " + this.blocks.length);
+	if (Math.random() < UPDATE_PROB) {
+		this._executeRules();
 	}
+}
+
+Plant.prototype._executeRules = function() {
+	var thisPlant = this;
+	var newBlocks = new Array();
+	thisPlant.blocks.forEach(function(b){
+//		console.log("checking block with sprite " + b.sprite["debugId"]);
+		b.dna.rules.forEach(function(r){
+			if (r.checkCondition(b)) {
+				thisPlant._produce(r, b, newBlocks);
+			}
+		});
+	});
+	this.blocks = this.blocks.concat(newBlocks);
+//	console.log("new blocks count: " + newBlocks.length);
+//	console.log("blocks count: " + this.blocks.length);
 }
 
 /**
@@ -49,22 +56,22 @@ Plant.prototype.update = function() {
  */
 var plantIdSeq = 0;
 Plant.prototype._addChild = function(variable, dna, parent) {
-	var group = this.game.add.group();
+	var group = game.add.group();
 	group.debugId = "id" + (++plantIdSeq);
 	group.x = 0;
 	group.y = -20;
 	// TODO: for testing only
 	group.rotation = Math.PI * (Math.random() - 0.5);
-	console.log("in parent.group before:");
+//	console.log("in parent.group before:");
 	parent.containerGroup.forEach(function(group) {
-		console.log(group["debugId"] + ":");
-		console.log(group);
+//		console.log(group["debugId"] + ":");
+//		console.log(group);
 	});
 	parent.containerGroup.add(group);
-	console.log("in parent.group after:");
+//	console.log("in parent.group after:");
 	parent.containerGroup.forEach(function(group) {
-		console.log(group["debugId"] + ":");
-		console.log(group);
+//		console.log(group["debugId"] + ":");
+//		console.log(group);
 	});
 	var block = new Block(variable, dna, parent, this);
 	block.init(group);
@@ -85,19 +92,25 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 	 * Rotate and translate child groups accordingly.
 	 * Move all children of predBlock to the last successor.
 	 */
-	console.log("in predBlock.parent.containerGroup before removal:");
+//	console.log("in predBlock(" + predBlock.sprite["debugId"] + ").parent.containerGroup before removal:");
 	predBlock.parent.containerGroup.forEach(function(group) {
-		console.log(group["debugId"] + ":");
-		console.log(group);
+//		console.log(group["debugId"] + ":");
+//		console.log(group);
 	});
 	// Remove
-	console.log(predBlock.parent.containerGroup.remove(predBlock.containerGroup));
+	predBlock.parent.containerGroup.remove(predBlock.containerGroup);
 	this.blocks.splice(this.blocks.indexOf(predBlock), 1);
 
 	// Add new children
-	console.log('production happens');
-	var block = this._addChild(rule.production.successor[Math.floor(Math.random() * 2)], predBlock.dna, predBlock.parent);
-	newBlocks.push(block);
+//	console.log('production happens');
+	// after the loop this will be the last block, it will get the children of predBlock
+	var block = null;
+	var parentBlock = predBlock.parent;
+	for (var i = 0 ; i < rule.production.successor.length ; i++) {
+		block = this._addChild(rule.production.successor[i], predBlock.dna, parentBlock);
+		newBlocks.push(block);
+		parentBlock = block;
+	}
 
 	// Move children to new parent
 	var toBeMoved = new Array();

@@ -24,12 +24,12 @@ Block.prototype.init = function(containerGroup) {
 	this.containerGroup.backRefBlockExists = true;
 	this.containerGroup.backRefBlock = this;
 	var bitmap = 'variable_a';
-	console.log('variable: ' + this.variable);
+//	console.log('variable: ' + this.variable);
 	if (this.variable == Alphabet.B) {
 		bitmap = 'variable_b';
 	}
 	this.sprite = this.containerGroup.create(0, 0, bitmap);
-	this.sprite.debugId = "id" + (++blockIdSeq);
+	this.sprite.debugId = "id" + (blockIdSeq++);
 	this.sprite.inputEnabled = true;
 	this.sprite.input.useHandCursor = true;
 //	this.sprite.tint = Math.random() * 0xffffff;
@@ -38,18 +38,29 @@ Block.prototype.init = function(containerGroup) {
 	this.sprite.anchor.x = 0.5;
 	this.sprite.anchor.y = 1.0;
 	
+	// TODO: DEBUGGING
 	var thisBlock = this;
 	
 	// TODO: DEBUGGING
 	this.sprite.events.onInputUp.add(function(obj, pointer) {
 		if (pointer.button == 0) {
-			console.log("producing");
-			console.log(thisBlock.containerGroup["debugId"]);
+//			console.log("producing");
+//			console.log(thisBlock.containerGroup["debugId"]);
 			thisBlock.plant._produce(thisBlock.dna.rules[0], thisBlock, thisBlock.plant.blocks);
-			console.log(thisBlock.plant.blocks.length);
+//			console.log(thisBlock.plant.blocks.length);
 		} else {
-			console.log("adding");
-			thisBlock.plant._addChild(Alphabet.B, thisBlock.dna, thisBlock);
+//			console.log("adding");
+			var block = thisBlock.plant._addChild(Alphabet.B, thisBlock.dna, thisBlock);
+			thisBlock.plant.blocks.push(block);
 		}
+	});
+	
+	// TODO: DEBUGGING
+	this.sprite.events.onInputOver.add(function(obj) {
+		var y = 0;
+		var step = 15;
+		game.debug.text("group : " + thisBlock.containerGroup["debugId"], 250, y+=step);
+		game.debug.text("sprite: " + thisBlock.sprite["debugId"], 250, y+=step);
+		game.debug.text("dna   : " + thisBlock.dna.rules[0].production.predecessor, 250, y+=step);
 	});
 }

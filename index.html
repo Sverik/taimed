@@ -131,9 +131,9 @@ function create() {
     
     // plant
     var dna = new DNA();
-    var rule = new Rule(new Production(Alphabet.A, [Alphabet.A, Alphabet.B]));
-    dna.rules.push(rule);
-    var plant = new Plant(game, plantsGroup);
+    dna.rules.push(new Rule(new Production(Alphabet.A, [Alphabet.A, Alphabet.B])));
+    dna.rules.push(new Rule(new Production(Alphabet.B, [Alphabet.B, Alphabet.A])));
+    var plant = new Plant(plantsGroup);
     plant.init(dna, Alphabet.A, 150);
     plants.push(plant);
 
