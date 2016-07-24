@@ -5,5 +5,5 @@ function DNA() {
 	/** Alphabet */
 	this.axiom = null;
 	/** array of float/s */
-	this.angles = new Array();
+	this.angles = [Math.PI / 4];
 }

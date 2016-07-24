@@ -4,6 +4,14 @@ function Production(predecessor, successor) {
 }
 
 var Alphabet = Object.freeze({
+	name : function(v) {
+		for (var k in this) {
+			if (this.hasOwnProperty(k) && this[k] == v) {
+				return k;
+			}
+		}
+		return undefined;
+	},
 	// Variables
 	A : 0,
 	B : 1,

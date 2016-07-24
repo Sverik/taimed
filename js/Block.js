@@ -62,5 +62,24 @@ Block.prototype.init = function(containerGroup) {
 		game.debug.text("group : " + thisBlock.containerGroup["debugId"], 250, y+=step);
 		game.debug.text("sprite: " + thisBlock.sprite["debugId"], 250, y+=step);
 		game.debug.text("dna   : " + thisBlock.dna.rules[0].production.predecessor, 250, y+=step);
+		game.debug.text("groupR: " + thisBlock.containerGroup.rotation, 250, y+=step);
 	});
+}
+
+Block.prototype.getSequence = function() {
+	var mySubSeq = (this.variable == Alphabet.SEED ? "" : Alphabet.name(this.variable));
+	var branching = false;
+	if (this.containerGroup.countLiving() > 2) {
+		branching = true;
+	}
+	this.containerGroup.iterate("backRefBlockExists", true, Phaser.Group.RETURN_NONE, function(childGroup) {
+		if (branching) {
+			mySubSeq += "[";
+		}
+		mySubSeq += childGroup["backRefBlock"].getSequence();
+		if (branching) {
+			mySubSeq += "]";
+		}
+	}, this);
+	return mySubSeq;
 }

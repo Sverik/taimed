@@ -61,7 +61,7 @@ Plant.prototype._addChild = function(variable, dna, parent) {
 	group.x = 0;
 	group.y = -20;
 	// TODO: for testing only
-	group.rotation = Math.PI * (Math.random() - 0.5);
+	group.rotation = Math.sign(0.5 - Math.random()) * dna.angles[0];
 //	console.log("in parent.group before:");
 	parent.containerGroup.forEach(function(group) {
 //		console.log(group["debugId"] + ":");
@@ -124,4 +124,8 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 	
 	// Destroy predBlock
 	predBlock.containerGroup.destroy(true);
+}
+
+Plant.prototype.getSequence = function() {
+	return this.seedBlock.getSequence();
 }
