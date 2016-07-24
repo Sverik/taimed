@@ -22,7 +22,7 @@ Plant.prototype.init = function(dna, variable, x) {
 	this.seedBlock.init(seedGroup);
 	this.blocks.push(this.seedBlock);
 	
-	var block = this._addChild(variable, dna, this.seedBlock);
+	var block = this._addChild(variable, dna, this.seedBlock, 0);
 	this.blocks.push(block);
 }
 
@@ -35,14 +35,16 @@ Plant.prototype.update = function() {
 Plant.prototype._executeRules = function() {
 	var thisPlant = this;
 	var newBlocks = new Array();
-	thisPlant.blocks.forEach(function(b){
-//		console.log("checking block with sprite " + b.sprite["debugId"]);
+	// traverse in reverse, otherwise removing blocks in _produce will cause problems
+	var i = thisPlant.blocks.length;
+	while (i--) {
+		var b = thisPlant.blocks[i];
 		b.dna.rules.forEach(function(r){
 			if (r.checkCondition(b)) {
 				thisPlant._produce(r, b, newBlocks);
 			}
 		});
-	});
+	}
 	this.blocks = this.blocks.concat(newBlocks);
 //	console.log("new blocks count: " + newBlocks.length);
 //	console.log("blocks count: " + this.blocks.length);
@@ -55,13 +57,12 @@ Plant.prototype._executeRules = function() {
  * @param parent {@link #Block}
  */
 var plantIdSeq = 0;
-Plant.prototype._addChild = function(variable, dna, parent) {
+Plant.prototype._addChild = function(variable, dna, parent, angle) {
 	var group = game.add.group();
 	group.debugId = "id" + (++plantIdSeq);
 	group.x = 0;
-	group.y = -20;
-	// TODO: for testing only
-	group.rotation = Math.sign(0.5 - Math.random()) * dna.angles[0];
+	group.y = -15;
+	group.rotation = angle;
 //	console.log("in parent.group before:");
 	parent.containerGroup.forEach(function(group) {
 //		console.log(group["debugId"] + ":");
@@ -93,10 +94,10 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 	 * Move all children of predBlock to the last successor.
 	 */
 //	console.log("in predBlock(" + predBlock.sprite["debugId"] + ").parent.containerGroup before removal:");
-	predBlock.parent.containerGroup.forEach(function(group) {
+//	predBlock.parent.containerGroup.forEach(function(group) {
 //		console.log(group["debugId"] + ":");
 //		console.log(group);
-	});
+//	});
 	// Remove
 	predBlock.parent.containerGroup.remove(predBlock.containerGroup);
 	this.blocks.splice(this.blocks.indexOf(predBlock), 1);
@@ -105,11 +106,33 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 //	console.log('production happens');
 	// after the loop this will be the last block, it will get the children of predBlock
 	var block = null;
+	var parentsStack = new Array();
 	var parentBlock = predBlock.parent;
+	// Keep the rotation of the block that is being replaced.
+	var angle = predBlock.containerGroup.rotation;
 	for (var i = 0 ; i < rule.production.successor.length ; i++) {
-		block = this._addChild(rule.production.successor[i], predBlock.dna, parentBlock);
-		newBlocks.push(block);
-		parentBlock = block;
+		switch (rule.production.successor[i]) {
+		case Alphabet.PUSH:
+			parentsStack.push(parentBlock);
+			break;
+		case Alphabet.POP:
+			parentBlock = parentsStack.pop();
+			break;
+		case Alphabet.LEFT:
+			// TODO: the LEFT/RIGHT paradigm does not comply with angles being in the DNA
+			angle -= parentBlock.dna.angles[0];
+			break;
+		case Alphabet.RIGHT:
+			// TODO: the LEFT/RIGHT paradigm does not comply with angles being in the DNA
+			angle += parentBlock.dna.angles[0];
+			break;
+		default:
+			block = this._addChild(rule.production.successor[i], predBlock.dna, parentBlock, angle);
+			angle = 0;
+			newBlocks.push(block);
+			parentBlock = block;
+			break;
+		}
 	}
 
 	// Move children to new parent

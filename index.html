@@ -131,10 +131,10 @@ function create() {
     
     // plant
     var dna = new DNA();
-    dna.rules.push(new Rule(new Production(Alphabet.A, [Alphabet.A, Alphabet.B])));
-    dna.rules.push(new Rule(new Production(Alphabet.B, [Alphabet.B, Alphabet.A])));
+    dna.rules.push(new Rule(new Production(Alphabet.B, [Alphabet.B, Alphabet.B])));
+    dna.rules.push(new Rule(new Production(Alphabet.A, [Alphabet.B, Alphabet.PUSH, Alphabet.LEFT, Alphabet.A, Alphabet.POP, Alphabet.RIGHT, Alphabet.A])));
     var plant = new Plant(plantsGroup);
-    plant.init(dna, Alphabet.A, 150);
+    plant.init(dna, Alphabet.A, 450);
     plants.push(plant);
 
     // targets

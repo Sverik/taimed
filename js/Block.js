@@ -33,7 +33,7 @@ Block.prototype.init = function(containerGroup) {
 	this.sprite.inputEnabled = true;
 	this.sprite.input.useHandCursor = true;
 //	this.sprite.tint = Math.random() * 0xffffff;
-	this.sprite.height = 20;
+	this.sprite.height = 15;
 	this.sprite.width = 5;
 	this.sprite.anchor.x = 0.5;
 	this.sprite.anchor.y = 1.0;
@@ -46,11 +46,15 @@ Block.prototype.init = function(containerGroup) {
 		if (pointer.button == 0) {
 //			console.log("producing");
 //			console.log(thisBlock.containerGroup["debugId"]);
-			thisBlock.plant._produce(thisBlock.dna.rules[0], thisBlock, thisBlock.plant.blocks);
+			thisBlock.dna.rules.forEach(function(rule){
+				if (rule.production.predecessor == thisBlock.variable) {
+					thisBlock.plant._produce(rule, thisBlock, thisBlock.plant.blocks);
+				}
+			});
 //			console.log(thisBlock.plant.blocks.length);
 		} else {
 //			console.log("adding");
-			var block = thisBlock.plant._addChild(Alphabet.B, thisBlock.dna, thisBlock);
+			var block = thisBlock.plant._addChild(Alphabet.B, thisBlock.dna, thisBlock, (Math.random() - 0.5) * Math.PI);
 			thisBlock.plant.blocks.push(block);
 		}
 	});
@@ -76,7 +80,18 @@ Block.prototype.getSequence = function() {
 		if (branching) {
 			mySubSeq += "[";
 		}
-		mySubSeq += childGroup["backRefBlock"].getSequence();
+		var angle = childGroup["backRefBlock"].dna.angles[0];
+		var rotString = "";
+		var sign = "+";
+		if (childGroup.rotation < 0) {
+			sign = "-";
+		}
+		var rot = Math.abs(childGroup.rotation);
+		while (rot > 0) {
+			rotString += sign;
+			rot -= angle;
+		}
+		mySubSeq += rotString + childGroup["backRefBlock"].getSequence();
 		if (branching) {
 			mySubSeq += "]";
 		}
