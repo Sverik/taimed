@@ -8,6 +8,6 @@ Rule.prototype.checkCondition = function(block) {
 	if (block.variable != this.production.predecessor) {
 		return false;
 	}
-	return true;
+//	return true;
 	return Math.random() < RULE_PROB;
 }

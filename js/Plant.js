@@ -62,18 +62,25 @@ Plant.prototype._addChild = function(variable, dna, parent, angle) {
 	group.debugId = "id" + (++plantIdSeq);
 	group.x = 0;
 	group.y = -15;
+	switch (parent.variable) {
+	case Alphabet.X:
+	case Alphabet.Y:
+	case Alphabet.Z:
+		group.y = 0;
+		break;
+	}
 	group.rotation = angle;
 //	console.log("in parent.group before:");
-	parent.containerGroup.forEach(function(group) {
+//	parent.containerGroup.forEach(function(group) {
 //		console.log(group["debugId"] + ":");
 //		console.log(group);
-	});
+//	});
 	parent.containerGroup.add(group);
 //	console.log("in parent.group after:");
-	parent.containerGroup.forEach(function(group) {
+//	parent.containerGroup.forEach(function(group) {
 //		console.log(group["debugId"] + ":");
 //		console.log(group);
-	});
+//	});
 	var block = new Block(variable, dna, parent, this);
 	block.init(group);
 	return block;
@@ -134,15 +141,26 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 			break;
 		}
 	}
-
+	// If angle is not 0 then add it to the children.
 	// Move children to new parent
 	var toBeMoved = new Array();
 	predBlock.containerGroup.iterate("backRefBlockExists", true, Phaser.Group.RETURN_NONE, function(childGroup) {
 		toBeMoved.push(childGroup);
 	}, this);
+	// Group's y depends on the parent block type. If it's invisible then y must be 0, otherwise -15.
+	var newY = -15;
+	switch (block.variable) {
+	case Alphabet.X:
+	case Alphabet.Y:
+	case Alphabet.Z:
+		newY = 0;
+		break;
+	}
 	toBeMoved.forEach(function(childGroup) {
 		block.containerGroup.add(childGroup);
+		childGroup.y = newY;
 		childGroup.backRefBlock.parent = block;
+		childGroup.rotation += angle;
 	});
 	
 	// Destroy predBlock

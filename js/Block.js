@@ -32,9 +32,17 @@ Block.prototype.init = function(containerGroup) {
 	this.sprite.debugId = "id" + (blockIdSeq++);
 	this.sprite.inputEnabled = true;
 	this.sprite.input.useHandCursor = true;
-//	this.sprite.tint = Math.random() * 0xffffff;
 	this.sprite.height = 15;
 	this.sprite.width = 5;
+	switch (this.variable) {
+	case Alphabet.X:
+	case Alphabet.Y:
+	case Alphabet.Z:
+//		this.sprite.tint = 0x000000;
+		this.sprite.height = 0;
+		this.sprite.width = 0;
+		break;
+	}
 	this.sprite.anchor.x = 0.5;
 	this.sprite.anchor.y = 1.0;
 	
@@ -65,8 +73,10 @@ Block.prototype.init = function(containerGroup) {
 		var step = 15;
 		game.debug.text("group : " + thisBlock.containerGroup["debugId"], 250, y+=step);
 		game.debug.text("sprite: " + thisBlock.sprite["debugId"], 250, y+=step);
-		game.debug.text("dna   : " + thisBlock.dna.rules[0].production.predecessor, 250, y+=step);
 		game.debug.text("groupR: " + thisBlock.containerGroup.rotation, 250, y+=step);
+		if (thisBlock.parent != null) {
+			game.debug.text("parent: " + thisBlock.parent.containerGroup["debugId"], 250, y+=step);
+		}
 	});
 }
 

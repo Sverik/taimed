@@ -114,10 +114,29 @@ function create() {
     
     // plant
     var dna = new DNA();
+/*
+    // Dragon curve
+    dna.angles[0] = Math.PI / 2;
+    dna.rules.push(new Rule(new Production(Alphabet.X, Alphabet.fromString("X+YA+"))));
+    dna.rules.push(new Rule(new Production(Alphabet.Y, Alphabet.fromString("-AX-Y"))));
+    dna.rules.push(new Rule(new Production(Alphabet.Z, Alphabet.fromString("AX"))));
+*/
+
+    // 	Fractal plant
+    dna.angles[0] = 5 * Math.PI / 36;
+    dna.rules.push(new Rule(new Production(Alphabet.X, Alphabet.fromString("A-[[X]+X]+A[+AX]-X"))));
+    dna.rules.push(new Rule(new Production(Alphabet.A, [Alphabet.A, Alphabet.A])));
+    dna.rules.push(new Rule(new Production(Alphabet.Z, [Alphabet.X])));
+
+/*
+    // Pythagoras
+    dna.angles[0] = Math.PI / 4;
+    dna.rules.push(new Rule(new Production(Alphabet.Z, [Alphabet.A])));
     dna.rules.push(new Rule(new Production(Alphabet.B, [Alphabet.B, Alphabet.B])));
     dna.rules.push(new Rule(new Production(Alphabet.A, [Alphabet.B, Alphabet.PUSH, Alphabet.LEFT, Alphabet.A, Alphabet.POP, Alphabet.RIGHT, Alphabet.A])));
+*/
     var plant = new Plant(plantsGroup);
-    plant.init(dna, Alphabet.A, 450);
+    plant.init(dna, Alphabet.Z, 250);
     plants.push(plant);
 
     //  Finally some stars to collect
