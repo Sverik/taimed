@@ -12,8 +12,6 @@
 </head>
 <body>
 
-<script type="text/javascript" src="js/Gate.js"></script>
-<script type="text/javascript" src="js/Target.js"></script>
 <script type="text/javascript" src="js/prizes.js"></script>
 <script type="text/javascript" src="js/DNA.js"></script>
 <script type="text/javascript" src="js/Block.js"></script>
@@ -27,21 +25,18 @@ var game = new Phaser.Game(800, 600, Phaser.AUTO, 'arvutused', { preload: preloa
 function preload() {
 
     game.load.image('sky', 'assets/sky.png');
-    game.load.image('cityscape', 'assets/city.png');
     game.load.spritesheet('kast', 'assets/sinine_kast.png', 48, 48);
     game.load.image('asukoht', 'assets/koht.png');
     game.load.image('ground', 'assets/platform.png');
     game.load.image('variable_a', 'assets/platform.png');
     game.load.image('variable_b', 'assets/platform_red.png');
     game.load.image('star', 'assets/star.png');
-    game.load.spritesheet('dude', 'assets/dude.png', 32, 48);
     
     prizeConf.forEach(function(conf){
         game.load.spritesheet(conf.key, conf.url, conf.width, conf.height);
     });
 }
 
-var player;
 var platforms;
 var cursors;
 
@@ -49,23 +44,15 @@ var plants;
 
 var plantsGroup;
 
-var targetGroup;
-var gateBlockGroup;
-var gateProxGroup;
 var notesGroup;
-var dispensers;
 
 var stars;
-var score = 0;
-var scoreText;
 
 var timer;
 var emitter;
 
 var MAX_VALUE_LIMIT = 14;
 var valueLimit = 1;
-var activeGates = 0;
-var gateClearedActionRunning = false;
 
 var running = false;
 
@@ -94,10 +81,6 @@ function create() {
     //  A simple background for our game
     game.add.sprite(0, 0, 'sky').scale.setTo(20, 1);
 
-    //  A simple background for our game
-    game.add.sprite(0, 68, 'cityscape').scale.setTo(1, 1);
-    game.add.sprite(BACKGROUND_WIDTH, 68, 'cityscape').scale.setTo(1, 1);
-    
     //  The platforms group contains the ground and the 2 ledges we can jump on
     platforms = game.add.group();
     
@@ -137,47 +120,9 @@ function create() {
     plant.init(dna, Alphabet.A, 450);
     plants.push(plant);
 
-    // targets
-    targetGroup = game.add.group();
-    targetGroup.enableBody =  true;
-    
-    // blockers
-    gateBlockGroup = game.add.group();
-    gateBlockGroup.enableBody =  true;
-    
-    // gate proximity
-    gateProxGroup = game.add.group();
-    gateProxGroup.enableBody =  true;
-    
-    dispensers = new Array();
-    for (var k = 0 ; k <= valueLimit ; k++) {
-        createDispenser(k);
-    }
-
-    // The player and its settings
-    player = game.add.sprite(0, game.world.height - 100, 'dude');
-
-    //  We need to enable physics on the player
-    game.physics.arcade.enable(player);
-    
-    game.camera.follow(player);
-
-    //  Player physics properties. Give the little guy a slight bounce.
-    player.body.bounce.y = 0.2;
-    player.body.gravity.y = 300;
-//    player.body.collideWorldBounds = true;
-
-    //  Our two animations, walking left and right.
-    player.animations.add('left', [0, 1, 2, 3], 10, true);
-    player.animations.add('right', [5, 6, 7, 8], 10, true);
-    
     //  Finally some stars to collect
     stars = game.add.group();
     stars.enableBody = true;
-
-    //  The score
-    scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
-    scoreText.fixedToCamera = true;
 
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
@@ -186,9 +131,6 @@ function create() {
     emitter = game.add.emitter(0, 0, 100);
     emitter.makeParticles('star');
     emitter.gravity = 150;
-    
-    // Gates
-    initGates();
     
 }
 
@@ -199,71 +141,19 @@ function update() {
 		p.update();
 	});
 
-    //  Collide the player and the stars with the platforms
-    game.physics.arcade.collide(player, platforms);
     game.physics.arcade.collide(stars, platforms);
     
-    game.physics.arcade.collide(player, gateBlockGroup);
+   	running = false;
     
-    running = true;
-    game.physics.arcade.overlap(player, gateProxGroup, function(player, prox){
-    	running = false;
-    });
-    
-    //  Reset the players velocity (movement)
-    player.body.velocity.x = 0;
-
     if (cursors.left.isDown)
     {
-        //  Move to the left
-        player.body.velocity.x = -150;
-
-        player.animations.play('left');
     }
     else if (cursors.right.isDown || running)
     {
-        //  Move to the right
-        player.body.velocity.x = 150;
-
-        player.animations.play('right');
     }
     else
     {
-        //  Stand still
-        player.animations.stop();
-
-        player.frame = 4;
     }
-    
-    //  Allow the player to jump if they are touching the ground.
-    if (cursors.up.isDown && player.body.touching.down)
-    {
-        player.body.velocity.y = -350;
-    }
-    
-    // wrap, if needed
-    if (/*! wrapping && */player.body.x > BACKGROUND_WIDTH + this.game.width) {
-    	wrapping = true;
-    	var wrapTo = player.body.x % BACKGROUND_WIDTH;
-//     	console.log("wrapping at " + player.body.x + ", to " + wrapTo);
-    	this.game.world.wrap(player, -wrapTo, false, true, false);
-//     	console.log("wrapped to " + player.body.x);
-    } else if (wrapping && player.body.x <= BACKGROUND_WIDTH + this.game.width) {
-    	console.log("wrap completed");
-    	wrapping = false;
-    }
-    
-    // Dispense new res, if needed.
-    for (var k in dispensers) {
-    	var target = dispensers[k];
-        if (target.filled) {
-            continue;
-        }
-        var res = createRes(k);
-        target.putRes(res);
-    }
-    
-    game.world.wrap(player, 0, true);
     
 /*
     if (prizeStatus != PrizeStatus.ADDING && activeGates == 2) {
@@ -277,10 +167,6 @@ function update() {
     	timer.add(300, unlockPrize, this);
     }
 */
-	if (prizeStatus != PrizeStatus.UNLOCKING && activeGates == 0) {
-		prizeStatus = PrizeStatus.UNLOCKING;
-		timer.add(300, unlockPrize, this);
-	}
 }
 
 function addPrize() {
@@ -308,72 +194,6 @@ function unlockPrize() {
     prizeBeingOpened.input.useHandCursor = true;
     prizeBeingOpened = null;
 */
-	timer.add(1100, initGates, this);
-}
-
-function initGates() {
-    var placeAt = player.body.x + 240;
-    if (placeAt + 80 > game.world.width) {
-        placeAt = 240;
-    }
-	console.log("init gate " + placeAt);
-	createGate(placeAt, 500);
-    gateClearedActionRunning = false;
-    prizeStatus = PrizeStatus.NA;
-}
-
-function confetti(gate) {
-    var width = (gate.targetCount * gate.targetStep - gate.operatorWidth);
-    emitter.x = gate.x + 0.25 * width + Math.random() * width * (0.25 + 0.25);
-    emitter.y = gate.y + Math.random() * 30;
-    emitter.start(true, 2400, null, 1);
-}
-
-function createGate(x, y) {
- 	var nodeType = Math.random() > 0.5 ? NodeTypeEnum.PLUS : NodeTypeEnum.MINUS;
-    var value1 = Math.ceil(Math.random() * (valueLimit + 1)) - 1;
-    var value2 = Math.ceil(Math.random() * (valueLimit + 1)) - 1;
-    // Gravitate towards bigger values.
-    var value = Math.max(value1, value2);
-    var a1 = Math.floor(Math.random() * (value + 1));
-    var a2 = Math.floor(Math.random() * (value + 1));
-    // Gravitate towards middle values.
-    var a = Math.floor((a1 + a2) / 2);
-    var b = value - a;
-    if (nodeType == NodeTypeEnum.MINUS) {
-    	var m_a = value;
-    	var m_b = a;
-    	var m_v = b;
-    	a = m_a;
-    	b = m_b;
-    	value = m_v;
-    }
-    
-    var conf = [
-        {
-            nodeType: NodeTypeEnum.PLUS,
-            value: a
-        },
-        {
-            nodeType: nodeType,
-            value: b
-        },
-        {
-            nodeType: NodeTypeEnum.VALUE,
-            value: undefined
-        }
-    ];
-    
-    var gate = new Gate(conf, x, y, targetGroup, gateBlockGroup, gateProxGroup);
-    gate.afterDestroy = function(thisGate) {
-    	activeGates--;
-    	if (score % 50 == 0 && valueLimit < MAX_VALUE_LIMIT) {
-    		valueLimit++;
-    		createDispenser(valueLimit);
-    	}
-    };
-    gate.init();
-    activeGates++;
 }
 
 function createRes(value) {
@@ -397,28 +217,10 @@ function createRes(value) {
     }, this);
     star.events.onDragStop.add(function(){
         var overlapped = Array();
-        game.physics.arcade.overlap(star, targetGroup, function(star, targetSprite) {
-            overlapped.push(targetSprite);
-        }, function(star, targetSprite) {
-        	// Dispensers eat always.
-        	if (targetSprite.target.isDispenser) {
-        		return true;
-        	}
-            if (targetSprite.target.locked || (targetSprite.target.filled && star.atTarget != targetSprite.target)) {
-                return false;
-            }
-        }, this);
 
         // find closest
         var c_d2 = 99999;
         var closest = null;
-        overlapped.forEach(function(targetSprite){
-            var d2 = (targetSprite.x - star.x)*(targetSprite.x - star.x) + (targetSprite.y - star.y)*(targetSprite.y - star.y);
-            if (d2 < c_d2) {
-                c_d2 = d2;
-                closest = targetSprite;
-            }
-        });
         
         if (closest == null) {
             // return to previous position
@@ -429,12 +231,7 @@ function createRes(value) {
                 star.x = star.dragStart.x;
                 star.y = star.dragStart.y;
             }
-        } else if (closest.target.isDispenser) {
-        	// dispensers just eat them
-        	collectStar(null, star);
         } else {
-            // snap and put to closest target
-            closest.target.putRes(star);
         }
     }, this);
     
@@ -445,37 +242,6 @@ function createRes(value) {
     star.fixedToCamera = true;
     
     return star;
-}
-
-function createDispenser(k) {
-	var x = 115 + 65 * (k % 11);
-	if (k <= 10) {
-		x -= 65;
-	}
-	var y = 50 + (50 * Math.floor(k / 11));
-    var target = new Target(targetGroup, true).init(x, y);
-    dispensers.push(target);
-    if (k > 0) {
-	    var emitter = game.add.emitter(target.getWidth() / 2, target.getWidth() / 2, 100);
-	    target.sprite.addChild(emitter);
-	    emitter.makeParticles('star');
-	    emitter.gravity = 150;
-	    emitter.start(false, 7000, 400, k);
-    }
-}
-
-function collectStar (player, star) {
-    
-    // Removes the star from the screen
-    star.customText.destroy();
-    star.destroy();
-    
-    if (star.atTarget) {
-        star.atTarget.filled = false;
-        star.atTarget.res = null;
-        star.atTarget.onUpdate(null);
-    }
-
 }
 
 </script>
