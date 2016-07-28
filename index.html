@@ -31,6 +31,9 @@ function preload() {
     game.load.image('variable_a', 'assets/platform.png');
     game.load.image('variable_b', 'assets/platform_red.png');
     game.load.image('star', 'assets/star.png');
+    game.load.image('button_play', 'assets/button_play.png');
+    game.load.image('button_step', 'assets/button_step.png');
+    game.load.image('button_stop', 'assets/button_stop.png');
     
     prizeConf.forEach(function(conf){
         game.load.spritesheet(conf.key, conf.url, conf.width, conf.height);
@@ -68,6 +71,12 @@ var PrizeStatus = {
 
 var prizeStatus = PrizeStatus.NA;
 var prizeBeingOpened = null;
+
+var tick = 0;
+
+var plantLifeRunning = false;
+
+var plantLifeText;
 
 function create() {
     timer = game.time.create(false);
@@ -154,6 +163,8 @@ function create() {
     var plant = new Plant(plantsGroup);
     plant.init(dna, Alphabet.Z, 250);
     plants.push(plant);
+    
+    plantLifeText = game.add.text(430, game.world.height - 50, "Age: 0");
 
     //  Finally some stars to collect
     stars = game.add.group();
@@ -162,6 +173,21 @@ function create() {
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
     
+    // Buttons
+    var bx = 100;
+    addButton(bx+=70, 'button_step', function(){
+    	console.log("step");
+    	updatePlants();
+    });
+    addButton(bx+=70, 'button_play', function(){
+    	console.log("play");
+    	plantLifeRunning = true;
+    });
+    addButton(bx+=70, 'button_stop', function(){
+    	console.log("stop");
+    	plantLifeRunning = false;
+    });
+    
     // Emitter
     emitter = game.add.emitter(0, 0, 100);
     emitter.makeParticles('star');
@@ -169,13 +195,25 @@ function create() {
     
 }
 
+function addButton(x, image, onClick) {
+	var button = game.add.button(x, game.world.height - 70, image, onClick, this);
+	button.onInputDown.add(function(thisButton){thisButton.tint = 0x000000;}, this);
+	button.onInputUp.add(function(thisButton){thisButton.tint = 0xa0a0a0;}, this);
+	button.onInputOver.add(function(thisButton){thisButton.tint = 0xa0a0a0;}, this);
+	button.onInputOut.add(function(thisButton){thisButton.tint = 0xffffff;}, this);
+
+}
+
 function update() {
 	
-	// Update plants
-	plants.forEach(function(p){
-		p.update();
-	});
-
+	tick++;
+	
+	if (tick % 10 == 0 && plantLifeRunning) {
+		updatePlants();
+	}
+	
+	plantLifeText.setText("Age: " + plants[0].lifeTickCount);
+	
     game.physics.arcade.collide(stars, platforms);
     
    	running = false;
@@ -202,6 +240,13 @@ function update() {
     	timer.add(300, unlockPrize, this);
     }
 */
+}
+
+function updatePlants() {
+	// Update plants
+	plants.forEach(function(p){
+		p.update();
+	});
 }
 
 function addPrize() {

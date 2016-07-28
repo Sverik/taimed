@@ -1,9 +1,10 @@
-var UPDATE_PROB = -0.1;
+var UPDATE_PROB = 1;
 
 function Plant(plantsGroup) {
 	this.blocks = new Array();
 	this.plantsGroup = plantsGroup;
 	this.seedBlock = null;
+	this.lifeTickCount = 0;
 }
 
 /**
@@ -33,6 +34,8 @@ Plant.prototype.update = function() {
 }
 
 Plant.prototype._executeRules = function() {
+	this.lifeTickCount++;
+	
 	var thisPlant = this;
 	var newBlocks = new Array();
 	// traverse in reverse, otherwise removing blocks in _produce will cause problems

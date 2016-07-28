@@ -2,7 +2,7 @@ function Rule(production) {
 	this.production = production;
 }
 
-var RULE_PROB = 0.05;
+var RULE_PROB = 1;
 
 Rule.prototype.checkCondition = function(block) {
 	if (block.variable != this.production.predecessor.variable) {
