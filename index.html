@@ -124,9 +124,25 @@ function create() {
 
     // 	Fractal plant
     dna.angles[0] = 5 * Math.PI / 36;
-    dna.rules.push(new Rule(new Production(Alphabet.X, Alphabet.fromString("A-[[X]+X]+A[+AX]-X"))));
-    dna.rules.push(new Rule(new Production(Alphabet.A, [Alphabet.A, Alphabet.A])));
-    dna.rules.push(new Rule(new Production(Alphabet.Z, [Alphabet.X])));
+    dna.rules.push(
+    	new Rule(
+    		new Production(
+    			new BlockState(
+    				Alphabet.X, new Resources(
+    					2, 0, 0
+   					)
+   				), Alphabet.debugBlockStateArray(
+   					Alphabet.fromString(
+   						"A-[[X]+X]+A[+AX]-X"
+ 					), new Resources(
+ 						1, 0, 0
+ 					)
+ 				)
+   			)
+   		)
+	);
+    dna.rules.push(new Rule(new Production(new BlockState(Alphabet.A, new Resources(2, 0, 0)), Alphabet.debugBlockStateArray([Alphabet.A, Alphabet.A], new Resources(1, 0, 0)))));
+    dna.rules.push(new Rule(new Production(new BlockState(Alphabet.Z, new Resources(1, 0, 0)), Alphabet.debugBlockStateArray([Alphabet.X], new Resources(1, 0, 0)))));
 
 /*
     // Pythagoras

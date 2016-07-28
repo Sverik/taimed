@@ -118,7 +118,7 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 	// Keep the rotation of the block that is being replaced.
 	var angle = predBlock.containerGroup.rotation;
 	for (var i = 0 ; i < rule.production.successor.length ; i++) {
-		switch (rule.production.successor[i]) {
+		switch (rule.production.successor[i].variable) {
 		case Alphabet.PUSH:
 			parentsStack.push(parentBlock);
 			break;
@@ -134,7 +134,7 @@ Plant.prototype._produce = function(rule, predBlock, newBlocks) {
 			angle += parentBlock.dna.angles[0];
 			break;
 		default:
-			block = this._addChild(rule.production.successor[i], predBlock.dna, parentBlock, angle);
+			block = this._addChild(rule.production.successor[i].variable, predBlock.dna, parentBlock, angle);
 			angle = 0;
 			newBlocks.push(block);
 			parentBlock = block;

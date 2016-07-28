@@ -5,7 +5,7 @@ function Rule(production) {
 var RULE_PROB = 0.05;
 
 Rule.prototype.checkCondition = function(block) {
-	if (block.variable != this.production.predecessor) {
+	if (block.variable != this.production.predecessor.variable) {
 		return false;
 	}
 //	return true;

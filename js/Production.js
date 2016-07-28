@@ -1,9 +1,24 @@
+/**
+ * @param predecessor BlockState
+ * @param successor Array of BlockState/s
+ */
 function Production(predecessor, successor) {
 	this.predecessor = predecessor;
 	if ( ! Array.isArray(successor)) {
 		throw "Successor must be an array!";
 	}
 	this.successor = successor;
+}
+
+function BlockState(variable, resources) {
+	this.variable = variable;
+	this.resources = resources;
+}
+
+function Resources(k, l, m) {
+	this.k = k;
+	this.l = l;
+	this.m = m;
 }
 
 var Alphabet = Object.freeze({
@@ -38,6 +53,14 @@ var Alphabet = Object.freeze({
 			}
 		}
 		return undefined;
+	},
+	// TODO: for easy generation of BlockState arrays
+	debugBlockStateArray : function(variables, resource) {
+		var ret = new Array();
+		for (var i = 0 ; i < variables.length ; i++) {
+			ret.push(new BlockState(variables[i], new Resources(resource.k, resource.l, resource.m)));
+		}
+		return ret;
 	},
 	// Variables
 	A : 0,

@@ -4,7 +4,7 @@
 function Block(variable, dna, parent, plant) {
 	this.dna = dna;
 	this.variable = variable;
-	this.resources = {};
+	this.resources = new Resources();
 	this.parent = parent;
 	this.plant = plant;
 	this.containerGroup = null;
@@ -55,7 +55,7 @@ Block.prototype.init = function(containerGroup) {
 //			console.log("producing");
 //			console.log(thisBlock.containerGroup["debugId"]);
 			thisBlock.dna.rules.forEach(function(rule){
-				if (rule.production.predecessor == thisBlock.variable) {
+				if (rule.production.predecessor.variable == thisBlock.variable) {
 					thisBlock.plant._produce(rule, thisBlock, thisBlock.plant.blocks);
 				}
 			});
